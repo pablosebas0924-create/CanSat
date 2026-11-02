@@ -1,0 +1,1136 @@
+<title>CanSat ÁBREGO-1</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Concepto: banco de integración en penumbra. El modelo ocupa toda la pantalla y la interfaz son rótulos técnicos a sus lados.
+   Naranja = paracaídas, cian = datos, coral = energía, ámbar = misión secundaria. */
+:root{
+  color-scheme:dark;
+  --bg:#0e1319; --panel:#151c24ee; --panel-solid:#151c24; --line:#33404e; --line-soft:#232d38;
+  --fg:#e8edf2; --muted:#9aa8b6; --cyan:#59d0ee; --coral:#ff7566; --amber:#f5b13d; --orange:#ff6a1f; --ok:#6fd59c;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow","Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --gl:max(16px,env(safe-area-inset-left,0px)); --gr:max(16px,env(safe-area-inset-right,0px));
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px;line-height:1.45}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 46%,transparent 55%,#05080cb0 100%)}
+#fade{position:fixed;inset:0;background:#05080c;opacity:0;pointer-events:none;transition:opacity .28s}
+#fade.on{opacity:1}
+#leaders{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+#leaders polyline{fill:none;stroke:var(--muted);stroke-width:1}
+#leaders polyline.sec{stroke:var(--amber)}
+#leaders polyline.sel{stroke:var(--cyan);stroke-width:1.6}
+#leaders circle{fill:var(--bg);stroke:var(--fg);stroke-width:1.3}
+#leaders circle.sec{stroke:var(--amber)}
+#leaders circle.sel{stroke:var(--cyan);fill:var(--cyan)}
+#labels{position:fixed;inset:0;pointer-events:none}
+.lbl{position:absolute;left:0;top:0;width:172px;text-align:left;display:grid;grid-template-columns:auto 1fr;gap:0 8px;padding:6px 9px;background:var(--panel);border:1px solid var(--line);border-radius:3px;pointer-events:auto;will-change:transform}
+.lbl b{grid-row:span 2;font:500 12px/1.5 var(--mono);color:var(--muted)}
+.lbl span{font:600 15px/1.15 var(--display);letter-spacing:.02em}
+.lbl small{font:400 10.5px/1.3 var(--mono);color:var(--muted)}
+.lbl.sec{border-color:var(--amber)}
+.lbl.sec small{color:var(--amber)}
+.lbl.sel{border-color:var(--cyan);background:#17303bf2}
+.lbl:hover{border-color:var(--fg)}
+.dim{position:fixed;left:0;top:0;font:500 12px var(--mono);color:var(--fg);background:#0e1319d0;padding:1px 5px;border-radius:2px;pointer-events:none;white-space:nowrap}
+.dim.warn{color:var(--amber)}
+header{position:fixed;top:0;left:0;right:0;padding-top:calc(12px + env(safe-area-inset-top,0px));padding-left:var(--gl);padding-right:var(--gr);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;pointer-events:none;flex-wrap:wrap}
+header>*{pointer-events:auto}
+.brand{min-width:0;pointer-events:none}
+.brand h1{margin:0;font:700 24px/1 var(--display);letter-spacing:.03em;text-wrap:balance}
+.brand p{margin:3px 0 0;font:400 11px/1.35 var(--mono);color:var(--muted);max-width:44ch}
+.tabs{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.tabs button{background:none;border:0;padding:8px 15px;font:600 15px/1 var(--display);letter-spacing:.04em;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--fg);color:var(--bg)}
+.tabs button:not([aria-selected="true"]):hover{color:var(--fg)}
+.hbtn{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:8px 13px;font:600 15px/1 var(--display);letter-spacing:.04em}
+.hbtn:hover{border-color:var(--fg)}
+.bar{position:fixed;left:0;right:0;bottom:0;padding-left:var(--gl);padding-right:var(--gr);padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;pointer-events:none}
+.bar .in{pointer-events:auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 10px;padding:8px 10px;background:var(--panel);border:1px solid var(--line);border-radius:5px;max-width:100%;min-width:0}
+.btn{background:#ffffff0a;border:1px solid var(--line);border-radius:3px;padding:7px 11px;font:600 14px/1 var(--display);letter-spacing:.04em;white-space:nowrap}
+.btn:hover{border-color:var(--fg)}
+.btn.pri{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.btn[aria-pressed="true"]{border-color:var(--cyan);color:var(--cyan)}
+.fld{display:flex;align-items:center;gap:7px;font:400 11.5px var(--mono);color:var(--muted);white-space:nowrap;min-width:0}
+.fld output{color:var(--fg);min-width:4.3em;font-variant-numeric:tabular-nums}
+input[type=range]{accent-color:var(--cyan);width:150px;min-width:70px;flex:1 1 auto}
+select{background:var(--panel-solid);border:1px solid var(--line);border-radius:3px;padding:4px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font:400 11px var(--mono);color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:0;border-top:2px solid;vertical-align:middle;margin-right:5px}
+#card{position:fixed;right:var(--gr);top:84px;width:318px;max-height:calc(100% - 170px);overflow:auto;background:var(--panel-solid);border:1px solid var(--line);border-radius:5px;padding:14px 16px}
+#card h2{margin:2px 28px 6px 0;font:700 24px/1.05 var(--display);letter-spacing:.02em;text-wrap:balance}
+#card .num{font:500 11px var(--mono);color:var(--muted)}
+#card p{margin:0 0 10px}
+#card h3{margin:12px 0 4px;font:600 12px/1.2 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+#card ul{margin:0;padding-left:17px}
+#card li{margin-bottom:3px}
+#card .pending{border:1px dashed var(--amber);border-radius:3px;padding:8px 10px;margin-top:10px}
+#card .pending h3{margin-top:0;color:var(--amber)}
+.x{position:absolute;top:8px;right:8px;width:30px;height:30px;background:none;border:0;font-size:20px;line-height:1;color:var(--muted)}
+.x:hover{color:var(--fg)}
+.ref{font:500 11px var(--mono);color:var(--cyan)}
+#hud{position:fixed;left:var(--gl);top:92px;width:232px;background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:10px 12px}
+#hud .sim{font:500 10.5px/1.3 var(--mono);color:var(--amber);margin-bottom:8px}
+.vals{display:grid;grid-template-columns:1fr 1fr;gap:7px 10px}
+.vals div{min-width:0}
+.vals dt{font:400 10.5px var(--mono);color:var(--muted)}
+.vals dd{margin:0;font:500 16px/1.2 var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.vals{margin:0}
+#hud canvas{display:block;width:100%;height:84px;margin-top:9px}
+#pkt{display:block;margin-top:8px;padding:4px 6px;background:#0b1016;border-radius:2px;font:400 10.5px var(--mono);color:var(--cyan);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.flight .brand p{display:none}
+body.flight #hud{top:60px}
+body.flight #cap{left:auto;right:var(--gr);top:60px;bottom:auto;transform:none;width:300px;text-align:left;padding:10px 13px;background:var(--panel);border:1px solid var(--line)}
+#hudfoot{margin-top:8px;font:400 11px/1.4 var(--mono);color:var(--muted)}
+#hudfoot .good{color:var(--ok)} #hudfoot .bad{color:var(--amber)}
+#cap{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(100px + env(safe-area-inset-bottom,0px));width:min(560px,calc(100% - 32px));text-align:center;background:#0b1016cc;border-radius:4px;padding:8px 14px;pointer-events:none}
+#cap b{display:block;font:700 19px/1.15 var(--display);letter-spacing:.03em}
+#cap span{font-size:13px;color:#d3dbe3}
+#req{position:fixed;top:0;right:0;bottom:0;width:min(470px,100%);background:var(--panel-solid);border-left:1px solid var(--line);padding:calc(18px + env(safe-area-inset-top,0px)) var(--gr) calc(18px + env(safe-area-inset-bottom,0px)) 20px;overflow:auto}
+#req h2{margin:0 30px 6px 0;font:700 26px/1.05 var(--display)}
+#req>p{margin:0 0 12px;color:var(--muted)}
+#req a{color:var(--cyan)}
+#req h3{margin:18px 0 6px;font:700 19px/1.1 var(--display);letter-spacing:.02em}
+#req p.m{margin:0 0 8px;font-size:13.5px}
+#req p.m b{font-weight:600}
+.mis{margin:0;padding-left:18px;font-size:13.5px}
+.mis li{margin-bottom:3px}
+.tw{overflow-x:auto}
+#bom{width:100%;border-collapse:collapse;font-size:12.5px}
+#bom th{font:500 11px var(--mono);color:var(--muted);text-align:left;padding:4px 6px 4px 0;border-bottom:1px solid var(--line)}
+#bom td{padding:5px 6px 5px 0;border-bottom:1px solid var(--line-soft);vertical-align:top}
+#bom td span{color:var(--muted);font-size:11.5px}
+#bom .n{text-align:right;font-family:var(--mono);font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap;padding-right:0}
+#bom th.n{text-align:right}
+#bom tfoot td{font-weight:600;border-bottom:0;border-top:1px solid var(--line)}
+.rq{display:grid;grid-template-columns:40px 1fr;gap:2px 8px;padding:9px 0;border-top:1px solid var(--line-soft)}
+.rq>b{font:500 12px/1.5 var(--mono);color:var(--cyan)}
+.rq strong{font:600 16px/1.15 var(--display);letter-spacing:.02em}
+.rq p{margin:1px 0 3px;font-size:13px}
+.rq em{font:400 11px/1.3 var(--mono);font-style:normal;color:var(--muted)}
+.rq em.pend{color:var(--amber)} .rq em.ok{color:var(--ok)}
+#err{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;background:var(--bg)}
+@media (max-width:760px){
+  .brand p{display:none}
+  .brand h1{font-size:20px}
+  .tabs{order:3;width:100%}
+  .tabs button{flex:1;padding:9px 4px}
+  .lbl{width:112px;padding:4px 6px;gap:0 5px}
+  .lbl span{font-size:12.5px}
+  .lbl small{display:none}
+  .lbl b{grid-row:auto;font-size:10.5px}
+  #card{left:var(--gl);right:var(--gr);top:auto;bottom:calc(10px + env(safe-area-inset-bottom,0px));width:auto;max-height:52%}
+  #hud{top:100px;width:auto;right:var(--gr);padding:7px 10px}
+  #hud canvas,#hud #hudfoot,#hud #pkt{display:none}
+  body.flight #hud{top:100px}
+  body.flight #cap{left:var(--gl);right:var(--gr);top:auto;bottom:calc(136px + env(safe-area-inset-bottom,0px));width:auto;padding:6px 10px}
+  .vals{grid-template-columns:repeat(3,1fr);gap:2px 6px}
+  .vals dd{font-size:12.5px}
+  .vals dt{font-size:9.5px}
+  #hud .sim{margin-bottom:4px;font-size:9.5px}
+  #cap{bottom:calc(136px + env(safe-area-inset-bottom,0px))}
+  #cap b{font-size:16px} #cap span{font-size:12px}
+  input[type=range]{width:100px}
+  .bar .in{gap:6px;padding:7px}
+  #legendFlow{display:none}
+}
+@media (prefers-reduced-motion:reduce){#fade{transition:none}}
+</style>
+
+<canvas id="gl" aria-label="Modelo 3D interactivo del CanSat. Arrastra para girar y usa la rueda o pellizca para acercar."></canvas>
+<div id="vig"></div>
+<svg id="leaders" aria-hidden="true"></svg>
+<div id="dims"></div>
+<div id="labels"></div>
+
+<header>
+  <div class="brand">
+    <h1>CanSat ÁBREGO-1</h1>
+    <p>Propuesta de diseño para CanSat Spain 2026/2027. Masas, costes y autonomía son estimaciones hasta probar el prototipo.</p>
+  </div>
+  <div class="tabs" role="tablist" aria-label="Vista">
+    <button id="tabM" role="tab" data-mode="modelo" aria-selected="true">Modelo</button>
+    <button id="tabD" role="tab" data-mode="despiece" aria-selected="false">Despiece</button>
+    <button id="tabF" role="tab" data-mode="descenso" aria-selected="false">Descenso</button>
+  </div>
+  <button class="hbtn" id="openReq">Ficha técnica</button>
+</header>
+
+<div class="bar" id="barM"><div class="in">
+  <button class="btn pri" id="tourBtn">Recorrido de cámara</button>
+  <button class="btn" id="xrayBtn" aria-pressed="false">Ver interior</button>
+  <button class="btn" id="dimBtn" aria-pressed="true">Cotas</button>
+  <button class="btn" id="rotBtn" aria-pressed="true">Giro automático</button>
+</div></div>
+
+<div class="bar" id="barD" hidden><div class="in">
+  <button class="btn pri" id="expBtn">Montar</button>
+  <label class="fld" for="expR">Despiece <input id="expR" type="range" min="0" max="100" value="100"></label>
+  <button class="btn" id="flowBtn" aria-pressed="true">Conexiones</button>
+  <button class="btn" id="lblBtn" aria-pressed="true">Etiquetas</button>
+  <div class="legend" id="legendFlow"><span><i style="border-color:var(--cyan)"></i>datos</span><span><i style="border-color:var(--coral)"></i>energía</span><span><i style="border-color:var(--amber)"></i>misión secundaria</span></div>
+</div></div>
+
+<div class="bar" id="barF" hidden><div class="in">
+  <button class="btn pri" id="playBtn">Lanzar</button>
+  <label class="fld" for="timeR">T+ <input id="timeR" type="range" min="0" max="1000" value="0" aria-label="Línea de tiempo"><output id="timeO">0 s</output></label>
+  <label class="fld" for="velR">Descenso <input id="velR" type="range" min="8" max="12" step="0.5" value="10" style="width:84px"><output id="velO">10 m/s</output></label>
+  <label class="fld" for="altS">Liberación <select id="altS"><option value="500">500 m</option><option value="750">750 m</option><option value="1000" selected>1000 m</option></select></label>
+</div></div>
+
+<aside id="hud" hidden aria-label="Telemetría simulada">
+  <div class="sim">SIMULACIÓN. Presión y temperatura: atmósfera ISA. Humedad y viento: perfiles de ejemplo. No son datos de vuelo.</div>
+  <dl class="vals">
+    <div><dt>Altitud</dt><dd id="vAlt">–</dd></div>
+    <div><dt>Velocidad</dt><dd id="vVel">–</dd></div>
+    <div><dt>Presión</dt><dd id="vP">–</dd></div>
+    <div><dt>Temp. aire</dt><dd id="vT">–</dd></div>
+    <div><dt>Humedad ej.</dt><dd id="vH">–</dd></div>
+    <div><dt>Viento ej.</dt><dd id="vW">–</dd></div>
+  </dl>
+  <code id="pkt" title="Paquete: identificador, segundo, presión, temperatura, humedad y deriva">AB1</code>
+  <canvas id="c1" aria-label="Altitud frente a tiempo"></canvas>
+  <canvas id="c2" aria-label="Temperatura frente a altitud"></canvas>
+  <div id="hudfoot"></div>
+</aside>
+
+<div id="cap" hidden><b id="capT"></b><span id="capS"></span></div>
+
+<aside id="card" hidden aria-live="polite"><button class="x" id="cardX" aria-label="Cerrar ficha">×</button><div id="cardBody"></div></aside>
+
+<aside id="req" hidden aria-label="Ficha técnica"><button class="x" id="reqX" aria-label="Cerrar ficha técnica">×</button>
+  <h2>Ficha técnica de ÁBREGO-1</h2>
+  <p>Propuesta con marcas, modelos y misión secundaria elegidos para este CanSat. Los requisitos vienen de las <a href="https://esero.es/wp-content/uploads/2026/09/bases-del-desafio-cansat-2026-2027.pdf" target="_blank" rel="noopener">bases CanSat 2026/2027 de ESERO Spain</a>.</p>
+
+  <h3>Misión secundaria: perfil de viento y humedad</h3>
+  <p class="m"><b>Pregunta.</b> ¿Cómo cambian el viento y la humedad en el primer kilómetro de atmósfera sobre el lugar de lanzamiento?</p>
+  <p class="m"><b>Por qué interesa.</b> Esta capa condiciona la dispersión de contaminantes y la formación de nubes bajas. La misión Aeolus de la ESA midió perfiles de viento desde el espacio, y este CanSat lo hace localmente durante su descenso.</p>
+  <p class="m"><b>Método.</b> Un paracaídas deriva casi con el viento, así que el cambio de posición GNSS permite estimarlo a cada altitud. El LSM6DSOX marca la apertura y el balanceo para filtrar esos datos. El SHT45 aporta la humedad y, con el TMP117, el punto de rocío.</p>
+  <p class="m"><b>Cómo se evalúa.</b></p>
+  <ul class="mis">
+    <li>Perfiles de viento y humedad cada 50 m de altitud.</li>
+    <li>Más del 90 % de los paquetes recibidos o recuperados de la microSD.</li>
+    <li>Viento comparado con un reanálisis como ERA5: diferencia media objetivo inferior a 2 m/s.</li>
+  </ul>
+
+  <h3>Lista de materiales</h3>
+  <p class="m">Masas y costes orientativos, sin IVA ni envío. Las piezas enlazadas se han comprobado en la web del fabricante o la tienda. Revisa el resto antes de comprar.</p>
+  <div class="tw"><table id="bom"><thead><tr><th>Grupo</th><th>Pieza y modelo</th><th class="n">g</th><th class="n">€</th></tr></thead><tbody id="bomBody"></tbody><tfoot id="bomFoot"></tfoot></table></div>
+
+  <h3>Requisitos R1–R15</h3>
+  <p class="m">Verde: resuelto en el diseño. Ámbar: falta demostrarlo con el CanSat real.</p>
+  <div id="reqList"></div>
+</aside>
+
+<div id="fade"></div>
+<div id="err" hidden><p>Este navegador no ha podido iniciar WebGL o cargar el motor 3D. Prueba con Chrome, Edge, Firefox o Safari actualizados.</p></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+"use strict";
+(function(){
+const $=s=>document.querySelector(s);
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const smooth=t=>{t=clamp(t);return t*t*(3-2*t)};
+const easeIO=t=>{t=clamp(t);return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2};
+const REDUCED=matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+/* ---------- CONTENIDO: requisitos de las bases 2026/2027 + propuesta de diseño ÁBREGO-1 ---------- */
+const AF='https://www.adafruit.com/product/';
+/* [grupo, pieza, modelo, cantidad, masa total g, coste total € orientativo, enlace] */
+const BOM=[
+ ['Estructura','Tubo de lata','Aluminio 6063, Ø66 × 1,2 mm, mecanizado',1,65,12],
+ ['Estructura','Tapas superior e inferior','PETG impreso en 3D',2,24,2],
+ ['Estructura','Bandejas internas','PETG impreso en 3D, 1,5 mm',6,21,2],
+ ['Estructura','Varillas y tuercas','M3 inox A2, 3 varillas y 24 tuercas',1,22,4],
+ ['Estructura','Cáncamo de anclaje','M4 inox A2, atraviesa la tapa',1,4,1],
+ ['Estructura','Lastre','Disco de latón Ø50 × 4 mm',1,66,6],
+ ['Sensores','Presión','Adafruit BMP390 (ID 4816)',1,1.7,10,AF+'4816'],
+ ['Sensores','Temperatura del aire','Adafruit TMP117 (ID 4821)',1,1.7,11,AF+'4821'],
+ ['Placa','Microcontrolador y registro','Adafruit Feather RP2040 Adalogger (ID 5980)',1,6,14,AF+'5980'],
+ ['Placa','Memoria','Tarjeta microSD 16 GB',1,.5,6],
+ ['Placa','Cableado','Cables STEMMA QT y silicona',1,8,8],
+ ['Batería','Celdas NiMH AAA','Panasonic eneloop BK-4MCCE, 750 mAh mín.',4,52,13],
+ ['Batería','Portapilas','2 × AAA, dos unidades apiladas',2,8,3],
+ ['Controles','Interruptores','E-Switch EG1218, deslizantes',2,4,2],
+ ['Comunicaciones','Radio LoRa','Adafruit RFM96W 433 MHz (ID 3073)',1,3.1,18,AF+'3073'],
+ ['Comunicaciones','Antena','Linx ANT-433-HETH, helicoidal',1,3.3,6],
+ ['Comunicaciones','Latiguillo y conector','Coaxial con conector uFL',1,1,1],
+ ['Misión secundaria','Humedad','Adafruit SHT45 (ID 5665)',1,1.7,12,AF+'5665'],
+ ['Misión secundaria','Acelerómetro y giroscopio','Adafruit LSM6DSOX (ID 4438)',1,1.7,11,AF+'4438'],
+ ['Misión secundaria','Receptor GNSS','SparkFun MAX-M10S (GPS-18037)',1,7,42,'https://www.sparkfun.com/sparkfun-gnss-receiver-breakout-max-m10s-qwiic.html'],
+ ['Misión secundaria','Antena GNSS y latiguillo','Adafruit parche 9 × 9 mm (ID 2460) y uFL–SMA (ID 851)',1,4,8],
+ ['Misión secundaria','Zumbador de localización','Piezo PS1240 (Adafruit ID 160)',1,1,2],
+ ['Paracaídas','Paracaídas','Ripstop de nailon naranja, Ø30 cm, 8 gajos, cuerda de Dyneema',1,20,12]
+];
+const TOTAL_G=BOM.reduce((a,b)=>a+b[4],0),TOTAL_E=BOM.reduce((a,b)=>a+b[5],0);
+const fmtN=(x,d=0)=>x.toFixed(d).replace('.',',');
+
+const CATS={
+ estructura:{n:1,name:'Estructura',short:'Estructura',status:'R1 · R2 · R9',anchorBody:'shell',anchor:[3.3,10,0],side:'L',
+  fn:'Tubo de aluminio de Ø66 × 115 mm con dos tapas de PETG y una columna de tres varillas M3 que sostiene seis bandejas. El lastre de latón completa la masa y baja el centro de gravedad.',
+  parts:['Tubo de aluminio 6063 con pared de 1,2 mm','Tapas y bandejas de PETG impresas en 3D','3 varillas M3 inox A2','Lastre: disco de latón Ø50 × 4 mm, unos 66 g'],
+  req:['<span class="ref">R1</span> Volumen de 115 mm de altura y 66 mm de diámetro antes de la liberación.','<span class="ref">R2</span> Masa total entre 300 y 350 g, con lastre si hace falta.','<span class="ref">R9</span> Soportar hasta 20 g en el lanzamiento.'],
+  check:'Pesar el conjunto real y ajustar el lastre. Hacer una prueba de vibración y carga para respaldar los 20 g.'},
+ sensores:{n:2,name:'Sensores de misión primaria',short:'Sensores',status:'§3.1 · obligatorio',anchorBody:'sensors',anchor:[1.35,6.95,.3],side:'R',
+  fn:'Miden la presión atmosférica y la temperatura del aire durante el descenso. Con la presión se calcula después la evolución de la altitud.',
+  parts:['Adafruit BMP390: presión, precisión relativa ±3 Pa','Adafruit TMP117: temperatura, ±0,1 °C de –20 a +50 °C','Bus I²C con conexión STEMMA QT','Ventilación: taladros de Ø2,8 mm a la altura de los sensores'],
+  req:['<span class="ref">§3.1</span> Medir temperatura del aire y presión atmosférica, y transmitirlas en vuelo.','Gráficas tras el vuelo, por ejemplo altitud frente a tiempo o temperatura frente a altitud.'],
+  check:'El TMP117 mide la temperatura de su entorno, así que hay que comprobar que el aire llega hasta él y medir su retardo térmico dentro de la lata.'},
+ placa:{n:3,name:'Placa electrónica',short:'Placa electrónica',status:'§3 · RP2040',anchorBody:'pcb',anchor:[-2,6.0,.6],side:'L',
+  fn:'Lee todos los sensores, guarda los datos en la microSD a 10 Hz y envía un paquete por radio cada segundo. Es el centro de todas las conexiones.',
+  parts:['Adafruit Feather RP2040 Adalogger: 50,8 × 22,8 mm','Tarjeta microSD de 16 GB','Registro local por si se pierde parte de la telemetría'],
+  req:['Las bases piden programar el CanSat, transmitir los datos y recuperarlos tras el vuelo.','<span class="ref">R3</span> Sin LiPo: el conector JST de batería de la placa queda sin usar.','<span class="ref">R14</span> Coste de los componentes de vuelo: 500 € como máximo.'],
+  check:'Alimentar la placa con 4,8 V nominales (hasta unos 5,6 V recién cargada) por el pin USB. Confirmar en banco que no daña el regulador antes de volar.'},
+ bateria:{n:4,name:'Batería',short:'Batería',status:'R3 · R4 · sin LiPo',anchorBody:'battery',anchor:[1.3,3,1.6],side:'R',
+  fn:'Cuatro celdas NiMH AAA en serie dan 4,8 V nominales y unos 750 mAh. Se sacan de frente por la ventana lateral sin abrir la lata.',
+  parts:['4 × Panasonic eneloop AAA BK-4MCCE','2 portapilas 2 × AAA apilados','Consumo medio estimado: 75 mA','Autonomía estimada: unas 8 h, con un margen del 15 %'],
+  req:['<span class="ref">R3</span> Las baterías LiPo están prohibidas.','<span class="ref">R4</span> Al menos 4 h seguidas encendido y baterías fácilmente accesibles.'],
+  check:'Medir el consumo real y hacer una prueba de descarga de 4 h con todo encendido.'},
+ controles:{n:5,name:'Interruptor y control de radio',short:'Interruptor y radio',status:'R5 · R11',anchorBody:'controls',anchor:[.68,4.8,2.9],side:'R',
+  fn:'Dos interruptores deslizantes en la ventana lateral. PWR corta la alimentación general. TX lo lee el programa para activar o bloquear la transmisión.',
+  parts:['2 × E-Switch EG1218 deslizantes','Placa frontal rotulada PWR y TX','Accesibles sin desmontar nada'],
+  req:['<span class="ref">R5</span> Interruptor general fácilmente accesible.','<span class="ref">R11</span> Sistema accesible para activar o desactivar la transmisión.'],
+  check:'Comprobar que no cambian de posición con las vibraciones del lanzamiento. Si se mueven, añadir un seguro.'},
+ comms:{n:6,name:'Sistema de comunicaciones',short:'Comunicaciones',status:'R10 · R11 · R12',anchorBody:'comms',anchor:[-1.4,1.2,.5],side:'L',
+  fn:'Radio LoRa con la antena en la base, fuera de la lata, porque el aluminio bloquearía la señal. Envía un paquete por segundo a la estación terrena.',
+  parts:['Adafruit RFM96W LoRa, 433 MHz, frecuencia configurable por programa','Linx ANT-433-HETH helicoidal en la base','Cada paquete empieza con el identificador AB1 y lleva CRC'],
+  req:['<span class="ref">R10</span> Usar la frecuencia asignada por la organización y poder cambiarla.','<span class="ref">R12</span> Identificar sin ambigüedad los datos propios.','<span class="ref">R1</span> Antena solo arriba o abajo, dentro del Ø66 mm antes de la liberación.'],
+  check:'La banda de 433 MHz es una suposición hasta que la organización asigne frecuencia. Ajustar la potencia a lo permitido, medir el alcance y confirmar la altura de la antena en su hoja de datos (aquí 12 mm).'},
+ paracaidas:{n:7,name:'Paracaídas',short:'Paracaídas',status:'R6 · R7 · R8',anchorBody:'chute',anchor:[2.7,13.2,0],side:'R',
+  fn:'Ø30 cm para descender a unos 10 m/s con 327 g. Plegado va sobre la tapa superior y ocupa 30 mm, sin rebasar el diámetro de la lata.',
+  parts:['Ripstop de nailon naranja, 8 gajos','Cuerdas de Dyneema de 1 mm','Unido al cáncamo M4 que atraviesa la tapa'],
+  req:['<span class="ref">R6</span> Reutilizable. Se recomiendan colores llamativos.','<span class="ref">R7</span> La unión debe soportar al menos 50 N, con pruebas previas.','<span class="ref">R8</span> Se recomiendan 8–12 m/s y 120 s de vuelo como máximo.','<span class="ref">R1</span> Puede sobresalir hasta 45 mm en altura.'],
+  check:'El diámetro supone Cd 0,75. Medir la velocidad real en una prueba de caída y hacer el ensayo de tracción de 50 N.'},
+ secundaria:{n:8,name:'Misión secundaria',short:'Misión secundaria',status:'§3.2 · viento',anchorBody:'gps',anchor:[-1.8,9.7,.5],side:'L',
+  fn:'Funciona como una radiosonda en miniatura: mide cómo cambian el viento y la humedad en el primer kilómetro de atmósfera. El viento se obtiene de la deriva del CanSat medida con GNSS.',
+  parts:['SparkFun MAX-M10S: posición GNSS, hasta 10 Hz','Adafruit SHT45: humedad, ±1 % HR típico entre 20 y 70 % HR','Adafruit LSM6DSOX: detecta la apertura y el balanceo, hasta ±16 g','Zumbador PS1240 y GNSS: localización tras aterrizar (R13)'],
+  req:['<span class="ref">§3.2</span> Elección libre, con objetivos claros y forma de evaluar los resultados.','<span class="ref">§3.3</span> Encaja con los ejemplos de telemetría avanzada y estudio de condiciones ambientales.','Debe cumplir los mismos requisitos técnicos y de presupuesto.'],
+  check:'Comprobar que el GNSS recupera posición tras la liberación. El retardo del SHT45 y la inercia del paracaídas limitan la resolución vertical a unos 50 m.'}
+};
+const REQS=[
+ ['R1','Dimensiones','Ø66 × 115 mm antes de la liberación. Antenas solo arriba o abajo. Los elementos externos no sobresalen del diámetro y como máximo 45 mm en altura.','Cumplido en la geometría: 30 mm arriba + 12 mm de antena abajo = 42 mm. Altura de antena por confirmar.','ok'],
+ ['R2','Masa','Masa total, con recuperación, entre 300 y 350 g. Lastre si hace falta.',`Estimación: ${fmtN(TOTAL_G)} g con 66 g de lastre. Hay que pesar el conjunto real.`,'pend'],
+ ['R3','Seguridad de materiales','Sin explosivos, pirotecnia ni materiales inflamables o peligrosos, incluidas baterías LiPo.','Cumplido en el diseño: celdas NiMH y ninguna LiPo.','ok'],
+ ['R4','Alimentación','Autónoma, con al menos 4 h encendido. Baterías fácilmente accesibles.','Estimación: unas 8 h. Acceso por la ventana lateral. Falta la prueba de descarga.','pend'],
+ ['R5','Encendido y apagado','Interruptor general fácilmente accesible.','Cumplido: interruptor PWR en la ventana lateral.','ok'],
+ ['R6','Sistema de recuperación','Paracaídas o equivalente, reutilizable. Colores llamativos recomendados.','Cumplido en el diseño: ripstop naranja reutilizable.','ok'],
+ ['R7','Resistencia de la unión','La unión debe soportar al menos 50 N, con pruebas previas.','Cáncamo M4 y cuerda de Dyneema. Falta el ensayo de tracción.','pend'],
+ ['R8','Velocidad de descenso','Recomendado: 8–12 m/s y 120 s de vuelo como máximo.','Calculado: unos 10 m/s y 99 s desde 1000 m. Falta la prueba de caída.','pend'],
+ ['R9','Resistencia estructural','Soportar hasta 20 g durante el lanzamiento.','No se puede demostrar con este modelo. Requiere ensayo.','pend'],
+ ['R10','Telecomunicaciones','Usar la frecuencia asignada y poder cambiarla.','Frecuencia del RFM96W configurable por programa. 433 MHz es una suposición.','ok'],
+ ['R11','Control de la transmisión','Sistema accesible para activar o desactivar la radio.','Cumplido: interruptor TX en la ventana lateral.','ok'],
+ ['R12','Identificación de datos','Distinguir sin ambigüedad las transmisiones propias.','Previsto: identificador AB1 y CRC en cada paquete. Falta programarlo.','pend'],
+ ['R13','Localización','Recomendado: GPS, baliza acústica u otro sistema.','Incluido: GNSS y zumbador PS1240.','ok'],
+ ['R14','Presupuesto','Componentes de vuelo: 500 € como máximo, con patrocinios a precio de mercado.',`Estimación: unos ${fmtN(TOTAL_E)} € sin IVA ni envío. Hay que revisar los precios.`,'ok'],
+ ['R15','Preparación','Preparación rápida y segura: encendido, comprobaciones y comunicaciones.','Interruptores y baterías sin abrir la lata. El procedimiento queda por escribir.','pend']
+];
+$('#reqList').innerHTML=REQS.map(r=>`<div class="rq"><b>${r[0]}</b><div><strong>${r[1]}</strong><p>${r[2]}</p><em class="${r[4]}">${r[3]}</em></div></div>`).join('');
+$('#bomBody').innerHTML=BOM.map(b=>`<tr><td>${b[0]}</td><td>${b[1]}<br><span>${b[6]?`<a href="${b[6]}" target="_blank" rel="noopener">${b[2]}</a>`:b[2]}${b[3]>1?` · ${b[3]} uds.`:''}</span></td><td class="n">${fmtN(b[4],b[4]%1?1:0)}</td><td class="n">${b[5]}</td></tr>`).join('');
+$('#bomFoot').innerHTML=`<tr><td colspan="2">Total estimado</td><td class="n">${fmtN(TOTAL_G)} g</td><td class="n">${fmtN(TOTAL_E)} €</td></tr>`;
+
+/* ---------- MOTOR ---------- */
+let renderer;
+try{
+  if(!window.THREE||!THREE.OrbitControls) throw 0;
+  renderer=new THREE.WebGLRenderer({canvas:$('#gl'),antialias:true,logarithmicDepthBuffer:true});
+}catch(e){ $('#err').hidden=false; return; }
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.0;
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(26,1,.5,40000);
+const controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.dampingFactor=.07;controls.minDistance=9;controls.maxDistance=420;controls.enablePan=true;controls.autoRotateSpeed=.55;
+
+const pmrem=new THREE.PMREMGenerator(renderer);
+function makeEnv(build){const s=new THREE.Scene();build(s);const t=pmrem.fromScene(s,.035).texture;return t}
+function hdr(r,g,b){return new THREE.MeshBasicMaterial({color:new THREE.Color(r,g,b),side:THREE.DoubleSide})}
+const envStudio=makeEnv(s=>{
+  s.add(new THREE.Mesh(new THREE.SphereGeometry(60,32,16),new THREE.MeshBasicMaterial({color:0x10161e,side:THREE.BackSide})));
+  const panel=(w,h,x,y,z,m)=>{const p=new THREE.Mesh(new THREE.PlaneGeometry(w,h),m);p.position.set(x,y,z);p.lookAt(0,0,0);s.add(p)};
+  panel(50,30,0,48,8,hdr(5,5.2,5.6));
+  panel(10,60,-46,6,18,hdr(7,8.2,10));
+  panel(8,50,46,10,-10,hdr(10,7.6,5.6));
+  panel(40,10,0,4,-52,hdr(2,3,4.4));
+  panel(30,14,10,-20,44,hdr(1.2,1.3,1.5));
+});
+const envSky=makeEnv(s=>{
+  const g=new THREE.SphereGeometry(60,32,24),c=[],p=g.attributes.position;
+  const top=new THREE.Color(.28,.5,.95),mid=new THREE.Color(1,1.1,1.25),low=new THREE.Color(.26,.3,.2);
+  for(let i=0;i<p.count;i++){const y=p.getY(i)/60;const col=y>0?mid.clone().lerp(top,Math.pow(y,.55)):low.clone();c.push(col.r,col.g,col.b)}
+  g.setAttribute('color',new THREE.Float32BufferAttribute(c,3));
+  s.add(new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide})));
+  const sun=new THREE.Mesh(new THREE.SphereGeometry(6,16,12),hdr(40,36,30));sun.position.set(30,40,24);s.add(sun);
+});
+
+const key=new THREE.DirectionalLight(0xfff1e0,2.6);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.bias=-.0004;key.shadow.normalBias=.02;
+scene.add(key,key.target);
+const rim=new THREE.SpotLight(0x8fc4ff,1.6,0,.5,.8);rim.position.set(-22,26,-30);rim.target.position.set(0,6,0);scene.add(rim,rim.target);
+const fill=new THREE.DirectionalLight(0xbcd0e6,.28);fill.position.set(-12,4,20);scene.add(fill);
+
+/* ---------- TEXTURAS ---------- */
+function cnv(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);return c}
+function tex(c,srgb=true){const t=new THREE.CanvasTexture(c);if(srgb)t.encoding=THREE.sRGBEncoding;t.anisotropy=8;return t}
+let seed=7;const rnd=()=>{seed=(seed*16807)%2147483647;return (seed-1)/2147483646};
+const brushed=tex(cnv(512,512,(g,w,h)=>{g.fillStyle='#8c8c8c';g.fillRect(0,0,w,h);for(let i=0;i<2400;i++){const v=110+rnd()*90|0;g.strokeStyle=`rgba(${v},${v},${v},.35)`;g.lineWidth=rnd()*1.3;const y=rnd()*h;g.beginPath();g.moveTo(0,y);g.lineTo(w,y+rnd()*2);g.stroke()}}),false);
+brushed.wrapS=brushed.wrapT=THREE.RepeatWrapping;
+const fabricTex=tex(cnv(256,256,(g,w,h)=>{g.fillStyle='#ff6a1f';g.fillRect(0,0,w,h);for(let i=0;i<w;i+=4){g.fillStyle=i%8?'#e85a12':'#ff7c37';g.globalAlpha=.3;g.fillRect(i,0,1.5,h);g.fillRect(0,i,w,1.5)}g.globalAlpha=1}));
+fabricTex.wrapS=fabricTex.wrapT=THREE.RepeatWrapping;fabricTex.repeat.set(6,3);
+const silkTex=(txt)=>tex(cnv(256,128,(g,w,h)=>{g.fillStyle='#20262d';g.fillRect(0,0,w,h);g.fillStyle='#e8edf2';g.font='600 34px "IBM Plex Mono",Menlo,monospace';g.textAlign='center';txt.forEach((t,i)=>g.fillText(t,w*(i+.5)/txt.length,h-20))}));
+
+/* ---------- MATERIALES ---------- */
+const std=(o)=>new THREE.MeshStandardMaterial(o);
+const M={
+ shell:std({color:0xbcc3ca,metalness:.88,roughness:.42,roughnessMap:brushed,side:THREE.DoubleSide}),
+ cap:new THREE.MeshLambertMaterial({color:0x2d343c}),
+ rod:std({color:0xd7dbe0,metalness:1,roughness:.25}),
+ tray:new THREE.MeshLambertMaterial({color:0x2a3138}),
+ chip:std({color:0x15181c,metalness:.25,roughness:.42}),
+ pin:std({color:0xd8c083,metalness:1,roughness:.28}),
+ can:std({color:0xcfd4da,metalness:1,roughness:.28}),
+ plastic:std({color:0x1d2228,metalness:0,roughness:.6,envMapIntensity:.14}),
+ cell:std({color:0xe9ecef,metalness:.12,roughness:.34}),
+ cellEnd:std({color:0xd8dbde,metalness:1,roughness:.3}),
+ wireR:std({color:0xcf3b30,roughness:.5}),wireK:std({color:0x15171a,roughness:.5}),wireC:std({color:0x3bb6d8,roughness:.5}),
+ red:std({color:0xc92a23,roughness:.35}),steel:std({color:0xaeb4bb,metalness:1,roughness:.3}),
+ fabric:std({map:fabricTex,roughness:.82,metalness:0}),
+ cord:std({color:0xf0f2f4,roughness:.8}),
+ brass:std({color:0xb8934a,metalness:1,roughness:.34}),
+ ivory:std({color:0xe9e4d4,roughness:.55}),
+ copper:std({color:0xc47a45,metalness:1,roughness:.32}),
+ ceramic:std({color:0xb9a98a,roughness:.5}),
+ cellBand:std({color:0x2f6fa6,roughness:.34}),
+ ribbon:std({color:0x7d5bc4,roughness:.55}),
+ wireA:std({color:0xf5b13d,roughness:.5}),
+ fabricPack:std({map:fabricTex,vertexColors:true,roughness:.78,metalness:0})
+};
+const sh=m=>{m.castShadow=m.receiveShadow=true;return m};
+function mesh(geo,mat,x=0,y=0,z=0){const m=sh(new THREE.Mesh(geo,mat));m.position.set(x,y,z);return m}
+function box(w,h,d,mat,x,y,z){return mesh(new THREE.BoxGeometry(w,h,d),mat,x,y,z)}
+function cyl(r,h,mat,x,y,z,seg=32){return mesh(new THREE.CylinderGeometry(r,r,h,seg),mat,x,y,z)}
+function tubeCurve(pts,r,mat){const c=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(...p)));return sh(new THREE.Mesh(new THREE.TubeGeometry(c,40,r,8,false),mat))}
+function annSector(r0,r1,y,t0,tl,up){
+  const n=96,p=[],idx=[];
+  for(let i=0;i<=n;i++){const t=t0+tl*i/n;p.push(r0*Math.sin(t),y,r0*Math.cos(t),r1*Math.sin(t),y,r1*Math.cos(t))}
+  for(let i=0;i<n;i++){const a=i*2;up?idx.push(a,a+1,a+2,a+1,a+3,a+2):idx.push(a,a+2,a+1,a+1,a+2,a+3)}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setIndex(idx);g.computeVertexNormals();
+  const uv=[];for(let i=0;i<p.length/3;i++)uv.push(0,0);g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));return g;
+}
+function tubeSeg(group,ro,ri,y0,y1,t0,tl,mat,capT=false,capB=false){
+  const h=y1-y0,yc=(y0+y1)/2;
+  group.add(mesh(new THREE.CylinderGeometry(ro,ro,h,256,1,true,t0,tl),mat,0,yc,0));
+  group.add(mesh(new THREE.CylinderGeometry(ri,ri,h,256,1,true,t0,tl),mat,0,yc,0));
+  if(capT)group.add(mesh(annSector(ri,ro,y1,t0,tl,true),mat));
+  if(capB)group.add(mesh(annSector(ri,ro,y0,t0,tl,false),mat));
+}
+function edgeQuad(group,ri,ro,y0,y1,t,mat){
+  const g=new THREE.BufferGeometry(),s=Math.sin(t),c=Math.cos(t);
+  g.setAttribute('position',new THREE.Float32BufferAttribute([ri*s,y0,ri*c,ro*s,y0,ro*c,ro*s,y1,ro*c,ri*s,y1,ri*c],3));
+  g.setAttribute('uv',new THREE.Float32BufferAttribute([0,0,1,0,1,1,0,1],2));
+  g.setIndex([0,1,2,0,2,3]);g.computeVertexNormals();group.add(mesh(g,mat));
+}
+function addChip(g,x,y,z,w,d,h=.14){
+  g.add(box(w,h,d,M.chip,x,y+h/2+.03,z));
+  const n=Math.max(3,Math.floor(w/.16)),pg=new THREE.BoxGeometry(.05,.05,.11);
+  const im=new THREE.InstancedMesh(pg,M.pin,n*2);const o=new THREE.Object3D();
+  for(let i=0;i<n;i++){const px=x-w/2+(i+.5)*w/n;[1,-1].forEach((s,k)=>{o.position.set(px,y+.05,z+s*(d/2+.04));o.updateMatrix();im.setMatrixAt(i*2+k,o.matrix)})}
+  im.castShadow=true;g.add(im);
+}
+function headerRow(g,x,y,z,n,dir='x'){
+  const step=.254;const b=box(dir==='x'?n*step:.25,.25,dir==='x'?.25:n*step,M.plastic,x,y+.125,z);g.add(b);
+  const im=new THREE.InstancedMesh(new THREE.BoxGeometry(.065,.65,.065),M.pin,n),o=new THREE.Object3D();
+  for(let i=0;i<n;i++){const k=(i-(n-1)/2)*step;o.position.set(dir==='x'?x+k:x,y+.3,dir==='x'?z:z+k);o.updateMatrix();im.setMatrixAt(i,o.matrix)}
+  g.add(im);
+}
+
+/* ---------- CONSTRUCCIÓN: unidades en cm, base de la lata en y=0 ---------- */
+const R=3.3,RI=3.18,H=11.5,TAU=Math.PI*2,TRAY=3.05;
+const canRoot=new THREE.Group(),flightRig=new THREE.Group();flightRig.add(canRoot);scene.add(flightRig);
+const bodies={};
+function body(id,cat,path,win,builder){const g=new THREE.Group();builder(g);canRoot.add(g);bodies[id]={id,cat,g,path:[[0,0,0],...path],win};g.traverse(o=>{if(o.isMesh)o.userData.cat=cat;});return g}
+
+function boardTex(w,d,label,base,trace){
+  const W=512,Hh=Math.max(128,Math.round(W*d/w));
+  return tex(cnv(W,Hh,(g,cw,ch)=>{
+    g.fillStyle=base;g.fillRect(0,0,cw,ch);
+    g.strokeStyle=trace;g.lineCap='round';
+    for(let i=0;i<34;i++){let x=20+rnd()*(cw-40),y=20+rnd()*(ch-40);g.lineWidth=1+rnd()*2.4;g.beginPath();g.moveTo(x,y);for(let k=0;k<3;k++){const l=20+rnd()*90;rnd()>.5?x+=l*(rnd()>.5?1:-1):y+=l*(rnd()>.5?1:-1);g.lineTo(x,y)}g.stroke()}
+    g.fillStyle='#d8b65f';const n=Math.floor(w/.254);
+    for(let i=0;i<n;i++){const x=(i+.5)*cw/n;[9,ch-9].forEach(y=>{g.beginPath();g.arc(x,y,4.5,0,7);g.fill()})}
+    g.fillStyle='#eef1f3';g.textAlign='center';g.textBaseline='middle';
+    let fs=Math.min(46,ch*.3);g.font=`600 ${fs}px "IBM Plex Mono",Menlo,monospace`;
+    while(g.measureText(label).width>cw-34&&fs>12){fs-=2;g.font=`600 ${fs}px "IBM Plex Mono",Menlo,monospace`}
+    g.fillText(label,cw/2,ch-30-fs/2);
+  }));
+}
+const boardSide=std({color:0x121519,roughness:.6});
+/* Placa real: w × d en cm, y = cara inferior; incluye separadores hasta la bandeja */
+function brd(g,w,d,x,y,z,label,base='#14181e',trace='#27323e',tray=null){
+  const top=std({map:boardTex(w,d,label,base,trace),roughness:.42,metalness:.15});
+  g.add(mesh(new THREE.BoxGeometry(w,.16,d),[boardSide,boardSide,top,boardSide,boardSide,boardSide],x,y+.08,z));
+  if(tray!==null)[[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([a,b])=>{const h=y-tray;g.add(cyl(.09,h,M.steel,x+a*(w/2-.22),tray+h/2,z+b*(d/2-.22),8))});
+  return y+.16;
+}
+function qt(g,x,y,z){g.add(box(.42,.2,.3,M.ivory,x,y+.1,z))}
+function tray(g,y){g.add(cyl(TRAY,.15,M.tray,0,y,0,72))}
+function surfGeo(nu,nv,fn){
+  const p=[],uv=[],col=[],idx=[],c=new THREE.Color();
+  for(let j=0;j<=nv;j++)for(let i=0;i<=nu;i++){const u=i/nu,v=j/nv,o=fn(u,v,c);p.push(o[0],o[1],o[2]);uv.push(u*4,v);col.push(c.r,c.g,c.b)}
+  for(let j=0;j<nv;j++)for(let i=0;i<nu;i++){const a=j*(nu+1)+i;idx.push(a,a+1,a+nu+1,a+1,a+nu+2,a+nu+1)}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setIndex(idx);g.computeVertexNormals();return g;
+}
+
+/* Lata con ventana de acceso (R4, R5, R11) orientada a +Z y taladros de ventilación */
+const WIN=[1.45,5.35],GAP=.95,VENT=[6.6,9.0];
+const ventTex=tex(cnv(4096,512,(g,w,h)=>{
+  g.fillStyle='#fff';g.fillRect(0,0,w,h);g.fillStyle='#000';
+  const px=w/(TAU*R),py=h/(VENT[1]-VENT[0]);
+  [0,Math.PI,Math.PI*1.5].forEach(t=>[6.9,7.3,8.3,8.7].forEach(y=>{for(let i=-2;i<=2;i++){g.beginPath();g.ellipse(t/TAU*w+i*.55*px,h-(y-VENT[0])*py,.14*px,.14*py,0,0,7);g.fill()}}));
+}),false);
+M.shellV=M.shell.clone();M.shellV.alphaMap=ventTex;M.shellV.alphaTest=.5;
+const decalTex=tex(cnv(1024,740,(g,w,h)=>{
+  g.clearRect(0,0,w,h);g.fillStyle='#ff6a1f';g.fillRect(40,70,944,16);
+  g.fillStyle='#0f1b26';g.textAlign='left';g.font='700 190px "Barlow Condensed","Arial Narrow",Arial,sans-serif';g.fillText('ÁBREGO-1',40,270);
+  g.font='600 62px "Barlow Condensed","Arial Narrow",Arial,sans-serif';g.fillText('SONDA DE VIENTO Y HUMEDAD',40,370);
+  g.font='500 44px "IBM Plex Mono",Menlo,monospace';g.fillText('CANSAT · Ø66 × 115 mm',40,470);g.fillText('ID RADIO AB1',40,540);
+}));
+M.decal=std({map:decalTex,alphaTest:.4,roughness:.55,side:THREE.DoubleSide});
+body('shell','estructura',[[0,11,0],[-8.4,7,-1.5]],[.14,.46],g=>{
+  tubeSeg(g,R,RI,.34,WIN[0],0,TAU,M.shell,true,false);
+  tubeSeg(g,R,RI,WIN[0],WIN[1],GAP/2,TAU-GAP,M.shell);
+  tubeSeg(g,R,RI,WIN[1],VENT[0],0,TAU,M.shell,false,true);
+  tubeSeg(g,R,RI,VENT[0],VENT[1],0,TAU,M.shellV);
+  tubeSeg(g,R,RI,VENT[1],H-.34,0,TAU,M.shell);
+  edgeQuad(g,RI,R,WIN[0],WIN[1],GAP/2,M.shell);edgeQuad(g,RI,R,WIN[0],WIN[1],-GAP/2,M.shell);
+  const d=new THREE.Mesh(new THREE.CylinderGeometry(R+.006,R+.006,3.6,64,1,true,.85,1.5),M.decal);d.position.y=3.5;g.add(d);
+});
+const capProfile=[[0,0],[3.17,0],[3.17,.03],[3.3,.03],[3.3,.26],[3.24,.34],[0,.34]].map(p=>new THREE.Vector2(p[0],p[1]));
+body('bottomcap','estructura',[[0,-4.5,0]],[.7,.96],g=>{const m=mesh(new THREE.LatheGeometry(capProfile,96),M.cap);m.rotation.x=Math.PI;m.position.y=.34;g.add(m)});
+body('ballast','estructura',[[0,-2.4,0]],[.68,.94],g=>{g.add(cyl(2.5,.4,M.brass,0,.56,0,72))});
+body('topcap','estructura',[[0,15,0]],[.06,.22],g=>{
+  const m=mesh(new THREE.LatheGeometry(capProfile,96),M.cap,0,H-.34,0);g.add(m);
+  const eye=mesh(new THREE.TorusGeometry(.26,.06,12,28),M.steel,0,H+.33,0);g.add(eye);
+  g.add(cyl(.2,.05,M.steel,0,H+.02,0,6));g.add(cyl(.09,.14,M.steel,0,H+.05,0));
+});
+const RODS=[[2.47,1.43],[0,-2.85],[-2.47,1.43]],TRAYS=[.85,1.5,5.45,6.6,8.0,9.4];
+body('frame','estructura',[[0,12,0],[8.4,7,-1.5]],[.3,.58],g=>{
+  RODS.forEach(([x,z])=>{
+    g.add(cyl(.15,H-.7,M.rod,x,H/2,z,14));
+    TRAYS.forEach(y=>{g.add(cyl(.27,.11,M.steel,x,y+.14,z,6));g.add(cyl(.27,.11,M.steel,x,y-.14,z,6))});
+  });
+});
+/* Radio y antena */
+body('comms','comms',[[0,.3,0]],[.62,.9],g=>{
+  tray(g,.85);
+  const top=brd(g,2.9,2.5,0,1.02,0,'RFM96W 433','#14181e','#27323e',.93);
+  g.add(box(1.6,.25,1.6,M.can,.1,top+.125,-.2));
+  g.add(cyl(.11,.13,M.pin,1.25,top+.065,.9,16));
+  addChip(g,-.95,top-.02,.65,.5,.42);
+});
+body('antenna','comms',[[0,-6,0]],[.72,.98],g=>{
+  g.add(cyl(.28,.08,M.tray,0,-.04,0,24));
+  const pts=[];for(let i=0;i<=90;i++){const a=i/90;pts.push(new THREE.Vector3(.22*Math.cos(a*TAU*7),-.1-a*1.06,.22*Math.sin(a*TAU*7)))}
+  g.add(sh(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),260,.035,6,false),M.copper)));
+  g.add(cyl(.05,.1,M.copper,.22,-.09,0,10));
+});
+/* Alimentación: cuatro AAA en dos portapilas apilados, eje hacia la ventana */
+body('battery','bateria',[[0,2.2,0]],[.6,.88],g=>{
+  tray(g,1.5);
+  [2.25,3.55].forEach(y=>{
+    g.add(box(2.5,.16,4.85,M.plastic,0,y-.58,0));
+    g.add(box(.1,.9,4.85,M.plastic,-1.2,y-.1,0));g.add(box(.1,.9,4.85,M.plastic,1.2,y-.1,0));
+    g.add(box(2.5,1.1,.14,M.plastic,0,y,-2.38));
+    [-.57,.57].forEach(x=>{g.add(box(.5,.5,.04,M.steel,x,y,2.36))});
+    [-.57,.57].forEach(x=>{
+      const c=mesh(new THREE.CylinderGeometry(.525,.525,4.45,40),M.cell,x,y,0);c.rotation.x=Math.PI/2;g.add(c);
+      const band=mesh(new THREE.CylinderGeometry(.53,.53,.5,40),M.cellBand,x,y,1.65);band.rotation.x=Math.PI/2;g.add(band);
+      const e=mesh(new THREE.CylinderGeometry(.18,.18,.06,18),M.cellEnd,x,y,2.25);e.rotation.x=Math.PI/2;g.add(e);
+    });
+  });
+  g.add(tubeCurve([[1.3,4.05,-2.2],[1.75,4.6,-1.6],[1.6,5.2,-1],[1.2,5.45,-.5]],.04,M.wireR));
+  g.add(tubeCurve([[-1.3,4.05,-2.2],[-1.75,4.6,-1.6],[-1.6,5.2,-1],[-1.2,5.45,-.5]],.04,M.wireK));
+});
+/* Controles accesibles */
+body('controls','controles',[[0,3,7.2]],[.62,.9],g=>{
+  g.add(mesh(new THREE.BoxGeometry(2.6,.92,.1),[M.chip,M.chip,M.chip,M.chip,std({map:silkTex(['PWR','TX']),roughness:.5}),M.chip],0,4.82,2.83));
+  g.add(box(2.6,.08,.9,M.plastic,0,5.32,2.42));
+  [-.68,.68].forEach((x,i)=>{
+    g.add(box(1.16,.4,.32,M.plastic,x,4.98,2.74));
+    g.add(box(.6,.14,.05,M.steel,x,4.98,2.895));
+    g.add(box(.2,.2,.16,i?M.steel:M.red,x+(i?-.14:.14),4.98,2.96));
+  });
+});
+/* Placa principal: Feather RP2040 Adalogger, 50,8 × 22,8 mm */
+body('pcb','placa',[[0,4.5,0]],[.56,.84],g=>{
+  tray(g,5.45);
+  const y=brd(g,5.08,2.28,0,5.78,0,'FEATHER RP2040 ADALOGGER','#14181e','#27323e',5.52);
+  addChip(g,.2,y-.03,-.1,.7,.7,.09);
+  addChip(g,1.2,y-.03,-.25,.5,.42,.11);
+  g.add(box(.9,.32,.75,M.can,-2.15,y+.16,0));
+  g.add(box(1.1,.16,1.05,M.can,1.65,5.68,.3));
+  g.add(box(.6,.3,.45,M.ivory,-1,y+.15,.55));
+  qt(g,2.2,y,-.7);
+  headerRow(g,.15,y-.3,1.02,16);headerRow(g,.15,y-.3,-1.02,12);
+});
+/* Sensores de la misión primaria */
+body('sensors','sensores',[[0,7,0]],[.52,.8],g=>{
+  tray(g,6.6);
+  const y1=brd(g,2.55,1.78,-1.35,6.82,-.1,'BMP390','#14181e','#27323e',6.67);
+  addChip(g,-1.35,y1-.03,-.25,.3,.3,.09);qt(g,-2.15,y1,.45);
+  const y2=brd(g,2.55,1.78,1.35,6.82,-.1,'TMP117','#14181e','#27323e',6.67);
+  addChip(g,1.35,y2-.03,-.25,.3,.3,.06);qt(g,2.15,y2,.45);
+  g.add(tubeCurve([[-1.9,y1+.14,.45],[-.8,y1+.5,.9],[.8,y1+.5,.9],[1.9,y2+.14,.45]],.035,M.wireC));
+});
+/* Misión secundaria: humedad y movimiento */
+body('secondary','secundaria',[[0,9.5,0]],[.48,.76],g=>{
+  tray(g,8.0);
+  const y1=brd(g,2.55,1.77,1.35,8.22,-.1,'SHT45','#14181e','#27323e',8.07);
+  addChip(g,1.35,y1-.03,-.25,.2,.2,.06);qt(g,2.15,y1,.45);
+  const y2=brd(g,2.56,1.78,-1.35,8.22,-.1,'LSM6DSOX','#14181e','#27323e',8.07);
+  addChip(g,-1.35,y2-.03,-.25,.3,.3,.07);qt(g,-2.15,y2,.45);
+  g.add(tubeCurve([[-1.9,y2+.14,.45],[-.8,y2+.5,.9],[.8,y2+.5,.9],[1.9,y1+.14,.45]],.035,M.wireA));
+});
+/* GNSS y zumbador */
+body('gps','secundaria',[[0,12,0]],[.44,.72],g=>{
+  tray(g,9.4);
+  const y=brd(g,3.6,3.05,-.25,9.62,.1,'MAX-M10S','#7a1420','#a02c3a',9.47);
+  addChip(g,-.25,y-.03,.1,1,1,.14);
+  g.add(cyl(.32,.75,M.pin,1.75,y+.3,.1,16).rotateZ(Math.PI/2));
+  qt(g,-1.8,y,-.9);
+  const bz=cyl(.61,.75,M.chip,-1.1,9.85,-2.2,28);g.add(bz);g.add(cyl(.12,.02,M.can,-1.1,10.23,-2.2,14));
+});
+/* Antena GNSS sobre la tapa: 9 × 9 mm */
+body('patch','secundaria',[[0,15,0]],[.06,.22],g=>{
+  g.add(box(1.2,.08,1.2,M.chip,1.6,H+.04,0));
+  g.add(box(.9,.32,.9,M.ceramic,1.6,H+.24,0));
+  g.add(box(.42,.015,.42,M.pin,1.6,H+.405,0));
+});
+/* Paracaídas plegado: 25 mm de tela sobre 5 mm de anclaje, 30 mm en total */
+const packMeshes=[];
+body('chute','paracaidas',[[0,20,0]],[0,.18],g=>{
+  const y0=H+.5,hh=2.5,ca=new THREE.Color(0xff6a1f),cb=new THREE.Color(0xff8a45);
+  const geo=surfGeo(160,28,(u,v,c)=>{
+    const t=u*TAU;
+    const prof=v>.62?Math.pow(Math.max(0,1-Math.pow((v-.62)/.38,2.4)),.55):v<.05?Math.sqrt(Math.max(.02,1-Math.pow((.05-v)/.05,2))):1;
+    const pleat=Math.abs(Math.sin(4*t+.35*v));
+    const r=(2.72+.09*Math.pow(pleat,.6)+.018*Math.sin(19*t+2.2*v))*prof;
+    c.copy(Math.floor((u*8+v*.2)%2)?ca:cb).multiplyScalar(.62+.38*Math.pow(pleat,.5));
+    return [r*Math.sin(t),y0+v*hh,r*Math.cos(t)];
+  });
+  const m=mesh(geo,M.fabricPack);g.add(m);packMeshes.push(m);
+  [1.25].forEach(y=>{const s=mesh(new THREE.TorusGeometry(2.86,.035,8,96),M.cord,0,y0+y,0);s.rotation.x=Math.PI/2;g.add(s);packMeshes.push(s)});
+});
+/* Cableado entre niveles: solo visible con el conjunto montado */
+const harness=new THREE.Group();canRoot.add(harness);
+[
+ [[[-1.5,1.3,1.0],[-2.5,2.6,.1],[-2.55,4.5,.1],[-2.3,6,.9]],.05,M.ribbon],
+ [[[1.25,1.2,.9],[1.3,.6,1.8],[.4,.35,1.0],[0,.2,.25]],.03,M.wireK],
+ [[[2.2,6.1,-.7],[2.55,6.5,-.4],[2.3,6.95,.45]],.03,M.wireC],
+ [[[-2.15,7.1,.45],[-2.7,7.8,.3],[-2.15,8.5,.45]],.03,M.wireC],
+ [[[2.15,8.5,.45],[2.6,9.2,.6],[-1.8,10.0,-.9]],.03,M.wireA],
+ [[[2.05,9.95,.1],[2.3,10.7,.1],[1.6,11.1,0],[1.6,11.5,0]],.025,M.wireK]
+].forEach(([p,r,m])=>harness.add(tubeCurve(p,r,m)));
+
+/* Materiales por categoría para resaltar sin afectar al resto */
+const catMats={};Object.keys(CATS).forEach(k=>catMats[k]=[]);
+const clones=new Map();
+canRoot.traverse(o=>{
+  if(!o.isMesh)return;
+  const cat=o.userData.cat;if(!cat)return;
+  const f=m=>{const key=cat+m.uuid;if(!clones.has(key)){const c=m.clone();clones.set(key,c);catMats[cat].push(c);c.userData.baseE=c.emissive?c.emissive.clone():null;c.userData.baseI=c.emissiveIntensity}return clones.get(key)};
+  o.material=Array.isArray(o.material)?o.material.map(f):f(o.material);
+});
+
+/* Plano de trabajo con retícula de 10 mm */
+const studio=new THREE.Group();scene.add(studio);
+const FLOOR=-3.2;
+const floorTex=tex(cnv(1024,1024,(g,w,h)=>{
+  g.fillStyle='#141b22';g.fillRect(0,0,w,h);
+  const s=w/40;
+  for(let i=0;i<=40;i++){const major=i%5===0;g.strokeStyle=major?'#4a5a6a':'#2c3844';g.lineWidth=major?2.2:1;g.beginPath();g.moveTo(i*s,0);g.lineTo(i*s,h);g.moveTo(0,i*s);g.lineTo(w,i*s);g.stroke()}
+}));
+const alpha=tex(cnv(512,512,(g,w,h)=>{const r=g.createRadialGradient(w/2,h/2,40,w/2,h/2,w/2);r.addColorStop(0,'#fff');r.addColorStop(.55,'#bbb');r.addColorStop(1,'#000');g.fillStyle=r;g.fillRect(0,0,w,h)}),false);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(40,40),std({map:floorTex,alphaMap:alpha,transparent:true,roughness:.92,metalness:0,envMapIntensity:.25}));
+floor.rotation.x=-Math.PI/2;floor.position.y=FLOOR;floor.receiveShadow=true;studio.add(floor);
+const bgStudio=tex(cnv(32,256,(g,w,h)=>{const r=g.createLinearGradient(0,0,0,h);r.addColorStop(0,'#0b1016');r.addColorStop(.58,'#1b2530');r.addColorStop(.72,'#141b23');r.addColorStop(1,'#0a0e13');g.fillStyle=r;g.fillRect(0,0,w,h)}));
+
+/* Cotas */
+const dimG=new THREE.Group();studio.add(dimG);
+function dline(a,b,c=0xe8edf2,o=.85){return new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(...a),new THREE.Vector3(...b)]),new THREE.LineBasicMaterial({color:c,transparent:true,opacity:o}))}
+const DX=4.9;
+dimG.add(dline([DX,0,0],[DX,H,0]),dline([R+.2,0,0],[DX+.3,0,0]),dline([R+.2,H,0],[DX+.3,H,0]));
+dimG.add(dline([-R,-2.2,0],[R,-2.2,0]),dline([-R,-1.9,0],[-R,-2.5,0]),dline([R,-1.9,0],[R,-2.5,0]));
+dimG.add(dline([-DX,H,0],[-DX,H+4.5,0],0xf5b13d),dline([-DX-.3,H,0],[-R-.2,H,0],0xf5b13d),dline([-DX-.3,H+4.5,0],[-R-.2,H+4.5,0],0xf5b13d));
+const env45=new THREE.Mesh(new THREE.CylinderGeometry(R,R,4.5,64,1,true),new THREE.MeshBasicMaterial({color:0xf5b13d,wireframe:false,transparent:true,opacity:.055,side:THREE.DoubleSide,depthWrite:false}));env45.position.y=H+2.25;dimG.add(env45);
+[H,H+4.5].forEach(y=>dimG.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(Array.from({length:72},(_,i)=>new THREE.Vector3(R*Math.cos(i/72*6.283),y,R*Math.sin(i/72*6.283)))),new THREE.LineBasicMaterial({color:0xf5b13d,transparent:true,opacity:.45}))));
+const dimTags=[
+ {t:'115 mm',p:[DX+.2,H/2,0]},{t:'Ø 66 mm',p:[0,-2.45,0]},{t:'máx. 45 mm · R1',p:[-DX-.2,H+2.25,0],w:1,left:1}
+].map(d=>{const e=document.createElement('div');e.className='dim'+(d.w?' warn':'');e.textContent=d.t;$('#dims').appendChild(e);return {...d,e,v:new THREE.Vector3(...d.p)}});
+
+/* Conexiones entre componentes */
+const flowG=new THREE.Group();canRoot.add(flowG);
+const ROUTES=[
+ {a:['sensors',[-1.35,6.95,.9]],b:['pcb',[-1.35,6,.9]],c:0x59d0ee},
+ {a:['sensors',[1.35,6.95,.9]],b:['pcb',[1.35,6,.9]],c:0x59d0ee},
+ {a:['secondary',[-1.9,8.3,.6]],b:['pcb',[-2.2,6,.6]],c:0xf5b13d},
+ {a:['secondary',[1.9,8.3,.6]],b:['pcb',[2.2,6,.6]],c:0xf5b13d},
+ {a:['gps',[-1.8,9.8,-.9]],b:['pcb',[1.9,6,-.8]],c:0xf5b13d},
+ {a:['patch',[1.6,11.6,0]],b:['gps',[1.75,9.9,.1]],c:0xf5b13d},
+ {a:['pcb',[-1.5,5.9,1]],b:['comms',[-1.3,1.2,.9]],c:0x59d0ee},
+ {a:['comms',[1.25,1.25,.9]],b:['antenna',[0,-.1,0]],c:0x59d0ee},
+ {a:['battery',[-1.2,4.1,-1]],b:['pcb',[-1.2,5.8,-1]],c:0xff7566},
+ {a:['controls',[-.68,4.8,2.7]],b:['battery',[-.6,4.1,2.2]],c:0xff7566}
+].map(r=>{
+  const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3()]);
+  const line=new THREE.Line(g,new THREE.LineBasicMaterial({color:r.c,transparent:true,opacity:.85,depthTest:false}));line.renderOrder=6;flowG.add(line);
+  const dots=[0,1,2].map(()=>{const d=new THREE.Mesh(new THREE.SphereGeometry(.13,10,8),new THREE.MeshBasicMaterial({color:r.c,depthTest:false}));d.renderOrder=7;flowG.add(d);return d});
+  return {...r,line,dots};
+});
+
+/* ---------- RIG DESPLEGADO ---------- */
+const deploy=new THREE.Group();deploy.visible=false;canRoot.add(deploy);
+const GORES=8,ROWS=14,SEG=GORES*10;
+const canopyGeo=new THREE.BufferGeometry();
+(function(){
+  const n=(ROWS+1)*(SEG+1),idx=[],uv=[],col=[];
+  const a=new THREE.Color(0xdc3c00),b=new THREE.Color(0xf05a08);
+  for(let r=0;r<=ROWS;r++)for(let s=0;s<=SEG;s++){uv.push(s/SEG*GORES,r/ROWS*3);const c=Math.floor(s/10)%2?a:b;col.push(c.r,c.g,c.b)}
+  for(let r=0;r<ROWS;r++)for(let s=0;s<SEG;s++){const i=r*(SEG+1)+s;idx.push(i,i+SEG+1,i+1,i+1,i+SEG+1,i+SEG+2)}
+  canopyGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(n*3),3));
+  canopyGeo.setAttribute('color',new THREE.Float32BufferAttribute(col,3));
+  canopyGeo.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+  canopyGeo.setIndex(idx);
+})();
+const canopy=sh(new THREE.Mesh(canopyGeo,std({vertexColors:true,roughness:.8,side:THREE.DoubleSide,envMapIntensity:.32})));canopy.frustumCulled=false;deploy.add(canopy);
+const lineMeshes=Array.from({length:GORES},()=>{const m=sh(new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,1,6),M.cord));deploy.add(m);return m});
+const riser=sh(new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,1,6),M.cord));deploy.add(riser);
+const _a=new THREE.Vector3(),_b=new THREE.Vector3(),_up=new THREE.Vector3(0,1,0),_q=new THREE.Quaternion();
+function stretch(m,a,b){_a.subVectors(b,a);const l=_a.length()||.001;m.position.copy(a).addScaledVector(_a,.5);m.scale.set(1,l,1);m.quaternion.copy(_q.setFromUnitVectors(_up,_a.divideScalar(l)))}
+function updateCanopy(Rc,s,c,time,ext,Ll,Lr){
+  const skirtY=H+.3+(Lr+Ll)*ext-c*8;
+  const Rs=Rc*lerp(.09,1,s)*lerp(1,.4,c),Hs=Rc*lerp(1.5,.72,s)*lerp(1,.18,c);
+  const PM=1.36,sinM=Math.sin(PM),cosM=Math.cos(PM),p=canopyGeo.attributes.position.array;
+  let i=0;
+  for(let r=0;r<=ROWS;r++){const v=r/ROWS,phi=lerp(.11,PM,v);
+    for(let k=0;k<=SEG;k++){const th=k/SEG*Math.PI*2;
+      const scal=1-.075*s*v*(1-Math.pow(Math.abs(Math.sin(th*GORES/2)),.6));
+      const fl=1+.014*Math.sin(3*th+time*5)*v*s+.05*(1-s)*Math.sin(5*th+time*14)*v;
+      const rad=Rs*Math.sin(phi)/sinM*scal*fl;
+      p[i++]=rad*Math.sin(th);p[i++]=skirtY+Hs*(Math.cos(phi)-cosM)/(1-cosM)+v*.25*Math.sin(th*GORES)*s*0;p[i++]=rad*Math.cos(th);
+    }}
+  canopyGeo.attributes.position.needsUpdate=true;canopyGeo.computeVertexNormals();
+  const conf=new THREE.Vector3(0,H+.3+Lr*ext-c*5,0),eye=new THREE.Vector3(0,H+.3,0);
+  stretch(riser,eye,conf);
+  lineMeshes.forEach((m,j)=>{const th=j/GORES*Math.PI*2,rr=Rs*(1-.075*s);stretch(m,conf,new THREE.Vector3(rr*Math.sin(th),skirtY,rr*Math.cos(th)))});
+  return skirtY;
+}
+
+/* ---------- ENTORNO DE VUELO ---------- */
+const flightEnv=new THREE.Group();flightEnv.visible=false;scene.add(flightEnv);
+const sky=new THREE.Mesh(new THREE.SphereGeometry(32000,32,18),new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,fog:false,
+ vertexShader:'varying vec3 vP;void main(){vP=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+ fragmentShader:'varying vec3 vP;void main(){float y=max(vP.y,0.0);vec3 h=vec3(.78,.86,.93),t=vec3(.16,.37,.70);vec3 c=mix(h,t,pow(y,.48));vec3 s=normalize(vec3(.5,.62,.4));c+=vec3(1.,.9,.72)*pow(max(dot(normalize(vP),s),0.),600.)*2.;c+=vec3(1.,.9,.75)*pow(max(dot(normalize(vP),s),0.),9.)*.14;gl_FragColor=vec4(c,1.);}'
+}));flightEnv.add(sky);
+const fieldTex=tex(cnv(2048,2048,(g,w,h)=>{
+  g.fillStyle='#5e7345';g.fillRect(0,0,w,h);
+  const cols=['#6d7f49','#7f8a4f','#566d40','#94935b','#4a6239','#a3986a','#688350','#7b7a4a'];
+  for(let i=0;i<26;i++){const y0=i*h/26;let x=0;while(x<w){const fw=30+rnd()*170;g.fillStyle=cols[Math.floor(rnd()*cols.length)];g.save();g.translate(x,y0);g.transform(1,0,.04,1,0,0);g.fillRect(0,0,fw,h/26+1);g.globalAlpha=.1;g.strokeStyle='#222';for(let l=0;l<8;l++){g.beginPath();g.moveTo(0,l*10);g.lineTo(fw,l*10);g.stroke()}g.restore();x+=fw}}
+  g.strokeStyle='#b7ae97';g.lineWidth=4;for(let i=0;i<7;i++){g.beginPath();g.moveTo(rnd()*w,0);g.bezierCurveTo(rnd()*w,h*.3,rnd()*w,h*.7,rnd()*w,h);g.stroke()}
+}));fieldTex.wrapS=fieldTex.wrapT=THREE.RepeatWrapping;fieldTex.repeat.set(5,5);
+const ground=new THREE.Mesh(new THREE.CircleGeometry(30000,64),std({map:fieldTex,roughness:1}));ground.rotation.x=-Math.PI/2;flightEnv.add(ground);
+const grassTex=tex(cnv(512,512,(g,w,h)=>{g.fillStyle='#55703c';g.fillRect(0,0,w,h);for(let i=0;i<9000;i++){const v=rnd();g.strokeStyle=v>.6?'#6b8a49':v>.3?'#48602f':'#7c9a55';g.lineWidth=1;const x=rnd()*w,y=rnd()*h;g.beginPath();g.moveTo(x,y);g.lineTo(x+rnd()*4-2,y-3-rnd()*6);g.stroke()}}));
+grassTex.wrapS=grassTex.wrapT=THREE.RepeatWrapping;grassTex.repeat.set(70,70);
+const grass=new THREE.Mesh(new THREE.CircleGeometry(1500,48),std({map:grassTex,roughness:1,alphaMap:tex(cnv(256,256,(g,w,h)=>{const r=g.createRadialGradient(w/2,h/2,60,w/2,h/2,w/2);r.addColorStop(0,'#fff');r.addColorStop(1,'#000');g.fillStyle=r;g.fillRect(0,0,w,h)}),false),transparent:true,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));
+grass.rotation.x=-Math.PI/2;grass.receiveShadow=true;flightEnv.add(grass);
+const cloudTex=tex(cnv(256,256,(g,w,h)=>{g.clearRect(0,0,w,h);for(let i=0;i<46;i++){const x=128+(rnd()-.5)*140,y=128+(rnd()-.5)*70,r=20+rnd()*42,gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,'rgba(255,255,255,.34)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(x-r,y-r,r*2,r*2)}}));
+const clouds=[];for(let i=0;i<26;i++){const m=new THREE.SpriteMaterial({map:cloudTex,transparent:true,depthWrite:false,fog:false,opacity:.8});const sp=new THREE.Sprite(m);const a=rnd()*6.28,d=350+rnd()*5000,sz=900+rnd()*1800;sp.scale.set(sz,sz*.55,1);sp.userData={x:Math.cos(a)*d,z:Math.sin(a)*d,alt:330+rnd()*560,o:.45+rnd()*.5};flightEnv.add(sp);clouds.push(sp)}
+const STREAK=260,stPos=new Float32Array(STREAK*3);for(let i=0;i<STREAK;i++){stPos[i*3]=(rnd()-.5)*190;stPos[i*3+1]=(rnd()-.5)*190;stPos[i*3+2]=(rnd()-.5)*190}
+const stGeo=new THREE.BufferGeometry();stGeo.setAttribute('position',new THREE.BufferAttribute(stPos,3));
+const streaks=new THREE.Points(stGeo,new THREE.PointsMaterial({color:0xffffff,size:.32,transparent:true,opacity:.5,depthWrite:false,fog:false}));streaks.frustumCulled=false;flightEnv.add(streaks);
+const rings=Array.from({length:7},()=>{const m=new THREE.Mesh(new THREE.RingGeometry(.93,1,48),new THREE.MeshBasicMaterial({color:0x59d0ee,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false,fog:false}));m.visible=false;m.userData.life=0;flightEnv.add(m);return m});
+
+/* ---------- PERFIL DE VUELO: atmósfera ISA, sin datos inventados de vuelo ---------- */
+const G=9.81,MASS=TOTAL_G/1000,CD=.75,RHO=1.2;
+const windAt=h=>3*Math.pow(Math.max(h,10)/10,.14);
+const esat=T=>6.112*Math.exp(17.62*T/(243.12+T));
+const fl={v:10,h0:1000,t:0,playing:false,prof:null,T:0,end:0,userCam:false,lastPacket:-1,lastRing:0,packets:0};
+function buildProfile(){
+  const dt=.05,a=[];let t=0,alt=fl.h0,vel=0,d=0;
+  while(alt>0&&t<400){
+    if(t<2)vel=G*t;else if(t<3.5)vel=lerp(G*2,fl.v,smooth((t-2)/1.5));else vel=fl.v;
+    a.push({t,alt,vel,d});d+=windAt(alt)*dt;alt-=vel*dt;t+=dt;
+  }
+  a.push({t,alt:0,vel:0,d});fl.drift=d;fl.prof=a;fl.T=t;fl.end=t+5;
+  fl.Dm=2*Math.sqrt((2*MASS*G/(RHO*CD*fl.v*fl.v))/Math.PI);
+  fl.Rc=fl.Dm*50;fl.Ll=fl.Dm*100*1.05;fl.Lr=6;
+  $('#hudfoot').innerHTML=`Vuelo estimado: <b>${fl.T.toFixed(0)} s</b> · <span class="${fl.T<=120?'good':'bad'}">${fl.T<=120?'dentro de los 120 s recomendados (R8)':'supera los 120 s recomendados (R8)'}</span><br>Ø paracaídas necesario: <b>${(fl.Dm*100).toFixed(0)} cm</b> con ${fmtN(TOTAL_G)} g y Cd 0,75 supuesto.<br>Deriva del ejemplo: <b>${fl.drift.toFixed(0)} m</b>.`;
+  drawCharts(0);
+}
+function sampleAt(t){const a=fl.prof;if(t>=fl.T)return {alt:0,vel:0,d:fl.drift};const i=clamp(Math.floor(t/.05),0,a.length-1);return a[i]}
+const isaP=h=>101325*Math.pow(1-2.25577e-5*h,5.25588)/100, isaT=h=>15-.0065*h, rhAt=h=>Math.min(100,100*esat(2)/esat(isaT(h)));
+function simRate(t){if(t<4)return .45;if(t>=fl.T-8&&t<fl.T+1)return 1.2;if(t>=fl.T)return 1;return 6}
+function setupChart(c){const r=devicePixelRatio>1?2:1,w=c.clientWidth||200,h=c.clientHeight||84;if(c.width!==w*r){c.width=w*r;c.height=h*r}const g=c.getContext('2d');g.setTransform(r,0,0,r,0,0);g.clearRect(0,0,w,h);return {g,w,h}}
+function plot(c,xs,ys,xr,yr,cur,xl,yl,col){
+  if(!c.offsetParent)return;
+  const {g,w,h}=setupChart(c),L=34,B=17,T=12,Rr=8;
+  const X=x=>L+(x-xr[0])/(xr[1]-xr[0])*(w-L-Rr),Y=y=>h-B-(y-yr[0])/(yr[1]-yr[0])*(h-B-T);
+  g.font='400 9.5px "IBM Plex Mono",Menlo,monospace';g.fillStyle='#9aa8b6';g.strokeStyle='#33404e';g.lineWidth=1;
+  g.textAlign='right';[yr[0],yr[1]].forEach(v=>{g.fillText(v.toFixed(v%1?1:0),L-4,Y(v)+3);g.beginPath();g.moveTo(L,Y(v));g.lineTo(w-Rr,Y(v));g.stroke()});
+  g.textAlign='left';g.fillText(xr[0].toFixed(xr[0]%1?1:0),L,h-5);g.textAlign='right';g.fillText(xr[1].toFixed(xr[1]%1?1:0)+' '+xl,w-Rr,h-5);
+  g.textAlign='left';g.fillText(yl,L+3,9);
+  g.beginPath();xs.forEach((x,i)=>{i?g.lineTo(X(x),Y(ys[i])):g.moveTo(X(x),Y(ys[i]))});g.strokeStyle='#4a5866';g.setLineDash([2,3]);g.stroke();g.setLineDash([]);
+  g.beginPath();let lx,ly;for(let i=0;i<=cur&&i<xs.length;i++){lx=X(xs[i]);ly=Y(ys[i]);i?g.lineTo(lx,ly):g.moveTo(lx,ly)}g.strokeStyle=col;g.lineWidth=1.7;g.stroke();
+  if(lx!==undefined){g.fillStyle=col;g.beginPath();g.arc(lx,ly,2.8,0,7);g.fill()}
+}
+function drawCharts(t){
+  if(!fl.prof)return;const st=Math.ceil(fl.prof.length/90),p=fl.prof.filter((_,i)=>i%st===0);
+  const cur=Math.floor(Math.min(t,fl.T)/.05/st);
+  plot($('#c1'),p.map(q=>q.t),p.map(q=>q.alt),[0,Math.ceil(fl.T/10)*10],[0,fl.h0],cur,'s','altitud (m)','#59d0ee');
+  const Tmin=isaT(fl.h0),Tmax=15;
+  plot($('#c2'),p.map(q=>q.alt),p.map(q=>isaT(q.alt)),[0,fl.h0],[+(Tmin).toFixed(1),Tmax],cur,'m','temperatura (°C)','#ff7566');
+}
+const PHASES=[
+ {to:2,t:'Liberación',s:'El CanSat se separa y cae libre. El LSM6DSOX detecta la liberación y la microSD empieza a registrar a 10 Hz. La duración es ilustrativa.'},
+ {to:3.5,t:'Despliegue del paracaídas',s:'La tela sale, las cuerdas se tensan y el dosel se infla. Aquí la unión recibe el mayor tirón: debe soportar al menos 50 N (R7).'},
+ {to:-8,t:'Descenso estable',s:'Envía temperatura y presión cada segundo a la estación terrena (§3.1). La deriva GNSS da el viento, y el SHT45, la humedad (§3.2). Cada anillo cian es un envío.'},
+ {to:0,t:'Aproximación',s:'Al acercarse al suelo baja el viento y la deriva se reduce. Las bases recomiendan descender a 8–12 m/s (R8).'},
+ {to:1e9,t:'Aterrizaje y recuperación',s:'Suena el zumbador y el GNSS da la posición (R13). El equipo recupera la microSD y obtiene las gráficas de altitud, temperatura, viento y humedad (§3.1, §3.2).'}
+];
+function phaseAt(t){if(t<2)return PHASES[0];if(t<3.5)return PHASES[1];if(t<fl.T-8)return PHASES[2];if(t<fl.T)return PHASES[3];return PHASES[4]}
+
+/* ---------- ESTADO ---------- */
+const S={mode:'modelo',e:0,eGoal:0,xray:false,dims:true,flow:true,labels:true,sel:null,auto:true,tour:null,tourT:0};
+function fit(){const a=innerWidth/innerHeight;return Math.max(1,.95/a)}
+let tween=null;
+function camTo(tgt,dirOrPos,dist,dur=1.8){
+  return new Promise(res=>{
+    const to=new THREE.Vector3(...tgt);
+    const sph0=new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target));
+    const sph1=new THREE.Spherical();
+    if(dirOrPos)sph1.setFromVector3(new THREE.Vector3(...dirOrPos).normalize());else sph1.copy(sph0);
+    sph1.radius=(dist===undefined?sph0.radius:dist*fit());
+    let dth=sph1.theta-sph0.theta;while(dth>Math.PI)dth-=2*Math.PI;while(dth<-Math.PI)dth+=2*Math.PI;
+    if(tween)tween.res();
+    tween={t:0,dur:REDUCED?.001:dur,from:controls.target.clone(),to,s0:sph0,dth,s1:sph1,res};
+    controls.enabled=false;
+  });
+}
+function stepTween(dt){
+  if(!tween)return;
+  tween.t+=dt;const k=easeIO(tween.t/tween.dur);
+  controls.target.lerpVectors(tween.from,tween.to,k);
+  const s=new THREE.Spherical(lerp(tween.s0.radius,tween.s1.radius,k),lerp(tween.s0.phi,tween.s1.phi,k),tween.s0.theta+tween.dth*k);
+  camera.position.setFromSpherical(s).add(controls.target);camera.lookAt(controls.target);
+  if(tween.t>=tween.dur){const r=tween.res;tween=null;controls.enabled=true;r()}
+}
+const wait=ms=>new Promise(r=>setTimeout(r,REDUCED?Math.min(ms,1200):ms));
+
+/* Etiquetas y líneas guía */
+const svg=$('#leaders'),lblEls={};
+Object.entries(CATS).forEach(([id,c])=>{
+  const b=document.createElement('button');b.className='lbl'+(id==='secundaria'?' sec':'');b.type='button';
+  b.innerHTML=`<b>${c.n}</b><span>${c.short}</span><small>${c.status}</small>`;
+  b.addEventListener('click',()=>select(S.sel===id?null:id));$('#labels').appendChild(b);
+  const line=document.createElementNS('http://www.w3.org/2000/svg','polyline'),dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  dot.setAttribute('r',3.2);if(id==='secundaria'){line.classList.add('sec');dot.classList.add('sec')}svg.append(line,dot);
+  lblEls[id]={b,line,dot,y:null,x:null};
+});
+const _v=new THREE.Vector3();
+function toScreen(v){const p=v.clone().project(camera);return {x:(p.x+1)/2*innerWidth,y:(1-p.y)/2*innerHeight}}
+function layoutLabels(dt){
+  const show=S.labels&&S.mode!=='descenso'&&(S.mode==='despiece'||S.xray||S.e>.25)&&!tweenBlocks();
+  $('#labels').style.display=svg.style.display=show?'':'none';
+  if(!show)return;
+  const W=innerWidth,Hh=innerHeight,narrow=W<=760,lw=narrow?112:172,lh=narrow?30:48,gap=narrow?5:9;
+  const cardOpen=S.sel&&!narrow?344:0;
+  const top=narrow?112:92,bottom=Hh-(narrow?(S.sel?Hh*.56:92):90);
+  const sides={L:[],R:[]};
+  Object.entries(CATS).forEach(([id,c])=>{
+    const bd=bodies[c.anchorBody];_v.set(...c.anchor);bd.g.localToWorld(_v);
+    const s=toScreen(_v);sides[c.side].push({id,s});
+  });
+  for(const side of ['L','R']){
+    const list=sides[side].sort((a,b)=>a.s.y-b.s.y);
+    let y=top;list.forEach(it=>{it.ty=Math.max(y,it.s.y-lh/2);y=it.ty+lh+gap});
+    let over=(list.length?list[list.length-1].ty+lh:0)-bottom;
+    if(over>0){let lim=bottom;for(let i=list.length-1;i>=0;i--){list[i].ty=Math.min(list[i].ty,lim-lh);lim=list[i].ty-gap}}
+    list.forEach(it=>{
+      const o=lblEls[it.id],x=side==='L'?(narrow?8:Math.max(16,W*.05)):W-lw-(narrow?8:Math.max(16,W*.05))-cardOpen;
+      const k=1-Math.exp(-dt*9);o.y=o.y===null?it.ty:lerp(o.y,it.ty,k);o.x=o.x===null?x:lerp(o.x,x,k);
+      o.b.style.transform=`translate(${o.x.toFixed(1)}px,${o.y.toFixed(1)}px)`;
+      const sx=side==='L'?o.x+lw:o.x,sy=o.y+lh/2,mx=side==='L'?sx+14:sx-14;
+      o.line.setAttribute('points',`${sx.toFixed(1)},${sy.toFixed(1)} ${mx.toFixed(1)},${sy.toFixed(1)} ${it.s.x.toFixed(1)},${it.s.y.toFixed(1)}`);
+      o.dot.setAttribute('cx',it.s.x.toFixed(1));o.dot.setAttribute('cy',it.s.y.toFixed(1));
+    });
+  }
+}
+function tweenBlocks(){return false}
+
+/* Selección */
+function select(id){
+  S.sel=id;
+  Object.entries(lblEls).forEach(([k,o])=>{const on=k===id;o.b.classList.toggle('sel',on);o.line.classList.toggle('sel',on);o.dot.classList.toggle('sel',on)});
+  Object.entries(catMats).forEach(([k,mats])=>mats.forEach(m=>{if(!m.emissive)return;if(k===id){m.emissive.set(k==='secundaria'?0xf5b13d:0x2b7fa8);m.emissiveIntensity=k==='secundaria'?.6:.42}else if(m.userData.baseE){m.emissive.copy(m.userData.baseE);m.emissiveIntensity=m.userData.baseI}}));
+  const card=$('#card');
+  if(!id){card.hidden=true;return}
+  const c=CATS[id];
+  $('#cardBody').innerHTML=`<div class="num">${c.n} / 8 · ${c.status}</div><h2>${c.name}</h2><p>${c.fn}</p><h3>Elección propuesta</h3><ul>${c.parts.map(r=>`<li>${r}</li>`).join('')}</ul><h3>Qué piden las bases</h3><ul>${c.req.map(r=>`<li>${r}</li>`).join('')}</ul><div class="pending"><h3>A comprobar en el prototipo</h3>${c.check}</div>`;
+  card.hidden=false;
+  if(S.mode!=='descenso'&&!S.tour&&S.e>.5){
+    const bd=bodies[c.anchorBody];_v.set(...c.anchor);bd.g.localToWorld(_v);
+    camTo([_v.x,_v.y,_v.z],null,46,1.1);
+  }
+}
+function setXray(on){
+  S.xray=on;$('#xrayBtn').setAttribute('aria-pressed',on);
+  catMats.estructura.forEach(m=>{const shellLike=m.side===THREE.DoubleSide||m.color.getHex()===M.cap.color.getHex();if(!shellLike)return;m.transparent=on;m.opacity=on?.14:1;m.depthWrite=!on;m.needsUpdate=true});
+  catMats.paracaidas.forEach(m=>{m.transparent=on;m.opacity=on?.28:1;m.depthWrite=!on;m.needsUpdate=true});
+}
+function setDimsPressed(){$('#dimBtn').setAttribute('aria-pressed',S.dims)}
+
+/* Modos */
+const VIEW={modelo:{t:[0,6.6,0],d:[.95,.2,1],r:50},despiece:{t:[0,13.6,0],d:[.34,.12,1],r:112}};
+function applyEnv(flight){
+  document.body.classList.toggle('flight',flight);studio.visible=!flight;flightEnv.visible=flight;deploy.visible=flight;
+  scene.background=flight?null:bgStudio;
+  scene.environment=flight?envSky:envStudio;
+  scene.fog=flight?new THREE.FogExp2(0xc7dbed,.00012):null;
+  rim.visible=!flight;
+  key.intensity=flight?1.5:2.6;key.color.set(flight?0xfff4e2:0xfff1e0);
+  fill.intensity=flight?.5:.28;
+  renderer.toneMappingExposure=flight?.82:1.02;
+  const sc=key.shadow.camera;const b=flight?95:22;sc.left=-b;sc.right=b;sc.top=b;sc.bottom=-b;sc.near=1;sc.far=flight?500:120;sc.updateProjectionMatrix();
+  if(!flight){key.position.set(14,30,18);key.target.position.set(0,6,0);flightRig.position.set(0,0,0);flightRig.rotation.set(0,0,0);packMeshes.forEach(m=>m.visible=true)}
+  else{setXray(false);S.e=S.eGoal=0;applyExplode();}
+  key.target.updateMatrixWorld();
+}
+let switching=false;
+async function setMode(m,instant){
+  if(switching)return;if(S.mode===m&&!instant)return;
+  stopTour();
+  const prev=S.mode;S.mode=m;
+  try{history.replaceState(null,'','#'+m)}catch(e){}
+  document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.mode===m));
+  $('#barM').hidden=m!=='modelo';$('#barD').hidden=m!=='despiece';$('#barF').hidden=m!=='descenso';$('#hud').hidden=m!=='descenso';
+  select(null);
+  $('#cap').hidden=true;
+  const crossing=(prev==='descenso')!==(m==='descenso');
+  if(crossing&&!instant){switching=true;$('#fade').classList.add('on');await wait(300)}
+  if(crossing||instant)applyEnv(m==='descenso');
+  if(m==='descenso'){
+    controls.autoRotate=false;tween=null;controls.enabled=true;fl.userCam=false;buildProfile();fl.t=0;fl.playing=false;fl.sph=new THREE.Spherical(58*fit(),1.42,.7);controls.target.set(0,7,0);camera.position.setFromSpherical(fl.sph).add(controls.target);$('#playBtn').textContent='Lanzar';
+    showPhase();
+  }else{
+    S.eGoal=m==='despiece'?1:0;$('#expR').value=S.eGoal*100;updateExpBtn();
+    const v=VIEW[m];
+    if(crossing||instant){const s=new THREE.Spherical().setFromVector3(new THREE.Vector3(...v.d));s.radius=v.r*fit()*1.25;s.theta-=.5;s.phi+=.12;controls.target.set(...v.t);camera.position.setFromSpherical(s).add(controls.target);}
+    camTo(v.t,v.d,v.r,crossing||instant?2.6:1.9);
+    if(m==='modelo'){controls.autoRotate=S.auto&&!REDUCED}else controls.autoRotate=false;
+  }
+  if(crossing&&!instant){await wait(60);$('#fade').classList.remove('on');switching=false}
+}
+function updateExpBtn(){$('#expBtn').textContent=S.eGoal>.5?'Montar':'Desmontar'}
+
+function polyAt(path,t){
+  const n=path.length-1,f=clamp(t)*n,i=Math.min(n-1,Math.floor(f)),u=f-i;
+  const a=path[i],b=path[i+1];return [lerp(a[0],b[0],u),lerp(a[1],b[1],u),lerp(a[2],b[2],u)];
+}
+function applyExplode(){
+  floor.position.y=lerp(FLOOR,-9.4,smooth(S.e/.9));
+  Object.values(bodies).forEach(b=>{const u=easeIO((S.e-b.win[0])/(b.win[1]-b.win[0]));const p=polyAt(b.path,u);b.g.position.set(p[0],p[1],p[2])});
+}
+
+/* Recorrido cinematográfico */
+function stopTour(){if(S.tour){S.tour.cancel=true;S.tour=null;$('#cap').hidden=true;$('#tourBtn').textContent='Recorrido de cámara';$('#tourBtn').classList.add('pri');if(S.mode==='modelo'){S.eGoal=0;setXray(false)}}}
+function caption(t,s){if(!t){$('#cap').hidden=true;return}$('#capT').textContent=t;$('#capS').textContent=s;$('#cap').hidden=false}
+async function runTour(){
+  if(S.tour){stopTour();return}
+  const tk={cancel:false};S.tour=tk;$('#tourBtn').textContent='Detener recorrido';controls.autoRotate=false;S.labels=true;
+  const go=async(f)=>{if(tk.cancel)throw 0;await f();if(tk.cancel)throw 0};
+  try{
+    await go(async()=>{caption('Volumen oficial','Lata de Ø66 × 115 mm. El paracaídas plegado, las antenas y el anclaje sobresalen 42 mm en total, por debajo del máximo de 45 mm (R1).');await camTo([0,5.5,0],[.5,-.13,1],44,3.4)});
+    await go(()=>wait(1000));
+    await go(async()=>{caption('Acceso lateral','Cuatro NiMH AAA, interruptor PWR y control TX se alcanzan sin abrir la lata (R4, R5, R11).');await camTo([0,3.3,2],[.28,.1,1],21,3)});
+    await go(()=>wait(2000));
+    await go(async()=>{caption('Interior','De abajo arriba: lastre, radio, batería, placa, sensores primarios, humedad y movimiento, y GNSS.');setXray(true);await camTo([0,6.4,0],[-.55,.22,1],40,2.6)});
+    await go(()=>wait(1100));
+    await go(async()=>{setXray(false);caption('Despiece','Cada pieza se separa siguiendo su eje de montaje.');S.eGoal=1;await camTo(VIEW.despiece.t,[.34,.12,1],VIEW.despiece.r,4.6)});
+    await go(()=>wait(1700));
+    await go(async()=>{caption('Misión secundaria','SHT45, LSM6DSOX y GNSS miden el perfil de humedad y viento del primer kilómetro (§3.2).');await camTo([0,19,0],[.2,.15,1],44,2.4)});
+    await go(()=>wait(2000));
+    await go(async()=>{caption('Volvemos a montar','Todo debe caber de nuevo en el volumen oficial.');S.eGoal=0;await camTo(VIEW.modelo.t,VIEW.modelo.d,VIEW.modelo.r,4.8)});
+  }catch(e){}
+  if(S.tour===tk){S.tour=null;$('#tourBtn').textContent='Recorrido de cámara';caption(null);controls.autoRotate=S.auto&&!REDUCED}
+}
+
+function showPhase(){const p=phaseAt(fl.t);caption(p.t,p.s)}
+
+/* ---------- ACTUALIZACIÓN DE VUELO ---------- */
+const _e=new THREE.Euler(),_o=new THREE.Vector3(),_t=new THREE.Vector3();
+let lastPhase=null,chartTick=0;
+function updateFlight(dt,time){
+  if(fl.playing){fl.t=Math.min(fl.end,fl.t+dt*simRate(fl.t));if(fl.t>=fl.end){fl.playing=false;$('#playBtn').textContent='Repetir'}}
+  const t=fl.t,st=sampleAt(t),T=fl.T;
+  const d=clamp((t-2)/1.5),l=easeIO(clamp((t-T)/2.4));
+  const ext=easeIO(clamp(d/.5)),inflate=smooth((d-.42)/.58)*(1+.08*Math.sin(clamp((d-.8)/.2)*Math.PI));
+  const Hfull=H+.3+fl.Lr+fl.Ll;
+  const skirtY=updateCanopy(fl.Rc,clamp(inflate,0,1.08),l,time,ext,fl.Ll,fl.Lr);
+  const started=t>0||fl.playing;
+  deploy.visible=d>0;packMeshes.forEach(m=>m.visible=d<=0);
+  const k=1-smooth(d*2.2),since=t-3.5,sw=smooth(since/3)*(1-l);
+  let rx=.34*Math.sin(t*2.3)*k*(started?1:0),rz=.28*Math.sin(t*1.7+.6)*k*(started?1:0);
+  rz+=.045*Math.sin(time*.95)*sw;rx+=.035*Math.sin(time*.71+1)*sw;
+  if(since>0)rz+=.2*Math.exp(-since*1.1)*Math.sin(since*4.2)*(1-l);
+  const yaw=t*.11*(1-l*.8);
+  const pivotY=lerp(5.75,Hfull,smooth(d));
+  _e.set(rx,yaw,lerp(rz,-Math.PI/2,l));flightRig.rotation.copy(_e);
+  _o.set(0,pivotY,0).applyEuler(_e);
+  const gy=-1.25-st.alt*6;
+  flightRig.position.set(-_o.x,pivotY-_o.y,-_o.z);
+  if(l>0){flightRig.position.lerp(_t.set(0,gy+3.3+1.25*0,0),l)}
+  const wx=-st.d*6;ground.position.set(wx,gy,0);grass.position.set(wx,gy+.05,0);grass.material.opacity=smooth(1-st.alt/140);grass.visible=st.alt<140;
+  /* nubes y estelas */
+  clouds.forEach(c=>{const u=c.userData;c.position.set(u.x+wx*.4,gy+u.alt*6,u.z);const dist=c.position.distanceTo(camera.position);c.material.opacity=u.o*smooth((dist-180)/700)});
+  const moved=fl.playing?st.vel*6*dt*simRate(t):0;const pa=stGeo.attributes.position;
+  if(moved>0){for(let i=0;i<STREAK;i++){let y=pa.getY(i)+moved;if(y>120)y-=240;pa.setY(i,y)}pa.needsUpdate=true}
+  streaks.position.set(controls.target.x,controls.target.y,controls.target.z);streaks.visible=st.alt>6;
+  /* luz */
+  key.position.set(90,150,110);key.target.position.set(0,lerp(5,28,sw),0);key.target.updateMatrixWorld();
+  /* telemetría: se envía cada segundo simulado */
+  const sec=Math.floor(t);
+  if(fl.playing&&sec!==fl.lastPacket&&t<T){fl.lastPacket=sec;
+    if(time-fl.lastRing>.4){fl.lastRing=time;const r=rings.find(x=>!x.visible);if(r){r.visible=true;r.userData.life=0;_v.set(0,-.7,0);canRoot.localToWorld(_v);r.position.copy(_v);r.userData.max=d>.8?40:14}}
+  }
+  rings.forEach(r=>{if(!r.visible)return;r.userData.life+=dt/1.15;const u=r.userData.life;if(u>=1){r.visible=false;r.material.opacity=0;return}const s=1+u*r.userData.max;r.scale.setScalar(s);r.quaternion.copy(camera.quaternion);r.material.opacity=.75*(1-u)});
+  /* cámara cinematográfica */
+  const midT=lerp(7,lerp(Hfull*.55,5.75,l),smooth(d));
+  let gt=[0,midT,0],gr,gp,gth;
+  if(l>0){gt=[lerp(0,14,l),lerp(midT,4,l),0]}
+  if(t<2){gr=58;gp=1.42;gth=.7+t*.1}
+  else if(t<3.6){gr=lerp(58,108,smooth(d));gp=lerp(1.42,1.86,smooth(d));gth=.9+d*.35}
+  else if(t<T-8){const s2=smooth((t-3.6)/6);gr=lerp(108,142,s2);gp=lerp(1.86,1.62,s2);gth=1.25+(t-3.6)*.012}
+  else if(t<T){const s3=smooth((t-(T-8))/8);gr=lerp(142,120,s3);gp=lerp(1.62,1.34,s3);gth=1.25+(T-11.6)*.012+s3*.2}
+  else{gr=lerp(120,74,l);gp=lerp(1.34,1.26,l);gth=1.45+(T-11.6)*.012+l*.35}
+  const f=fit();
+  const kk=1-Math.exp(-dt*(t>=2&&t<3.6?2.6:1.4));
+  const nx=lerp(controls.target.x,gt[0],kk),ny=lerp(controls.target.y,gt[1],kk),nz=lerp(controls.target.z,gt[2],kk);
+  if(!fl.userCam){
+    fl.sph.radius=lerp(fl.sph.radius,gr*f,kk);fl.sph.phi=lerp(fl.sph.phi,gp,kk);fl.sph.theta=lerp(fl.sph.theta,gth,kk);
+    controls.target.set(nx,ny,nz);camera.position.setFromSpherical(fl.sph).add(controls.target);
+  }else{
+    const dx=nx-controls.target.x,dy=ny-controls.target.y,dz=nz-controls.target.z;
+    controls.target.set(nx,ny,nz);camera.position.x+=dx;camera.position.y+=dy;camera.position.z+=dz;
+  }
+  if(camera.position.y<gy+1.5)camera.position.y=gy+1.5;
+  /* HUD */
+  const alt=st.alt;
+  $('#vAlt').textContent=alt.toFixed(0)+' m';$('#vVel').textContent=st.vel.toFixed(1)+' m/s';$('#vP').textContent=isaP(alt).toFixed(1)+' hPa';$('#vT').textContent=isaT(alt).toFixed(1)+' °C';$('#vH').textContent=rhAt(alt).toFixed(0)+' %';$('#vW').textContent=(t<T?windAt(alt):0).toFixed(1)+' m/s';
+  $('#pkt').textContent=t<T?`AB1,${String(sec).padStart(3,'0')},${isaP(alt).toFixed(1)},${isaT(alt).toFixed(1)},${rhAt(alt).toFixed(0)},${st.d.toFixed(0)}`:'AB1,fin de misión';
+  $('#timeR').value=Math.round(t/fl.end*1000);$('#timeO').textContent=Math.min(t,T).toFixed(0)+' s';
+  const p=phaseAt(t);if(p!==lastPhase){lastPhase=p;caption(p.t,p.s)}
+  chartTick+=dt;if(chartTick>.12){chartTick=0;drawCharts(t)}
+}
+
+/* ---------- BUCLE ---------- */
+function updateDims(){
+  harness.visible=S.e<.02;
+  const show=S.mode==='modelo'&&S.dims&&S.e<.02&&!S.xray;
+  dimG.visible=show;
+  dimTags.forEach(d=>{d.e.hidden=!show;if(show){const s=toScreen(d.v);d.e.style.transform=`translate(${s.x.toFixed(1)}px,${s.y.toFixed(1)}px) translate(${d.left?'-100%':'8px'},-50%)`}});
+}
+function updateFlow(time){
+  const vis=S.flow&&S.mode==='despiece'&&S.e>.75;
+  flowG.visible=vis;if(!vis)return;
+  const A=new THREE.Vector3(),B=new THREE.Vector3();
+  ROUTES.forEach((r,ri)=>{
+    A.set(...r.a[1]).add(bodies[r.a[0]].g.position);B.set(...r.b[1]).add(bodies[r.b[0]].g.position);
+    const p=r.line.geometry.attributes.position;p.setXYZ(0,A.x,A.y,A.z);p.setXYZ(1,B.x,B.y,B.z);p.needsUpdate=true;r.line.geometry.computeBoundingSphere();
+    r.dots.forEach((d,i)=>{const u=REDUCED?(i+.5)/3:((time*.32+i/3+ri*.13)%1);d.position.lerpVectors(A,B,u)});
+  });
+}
+function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();svg.setAttribute('viewBox',`0 0 ${w} ${h}`)}
+addEventListener('resize',resize);resize();
+
+const clock=new THREE.Clock();
+function frame(){
+  const dt=Math.min(clock.getDelta(),.05),time=clock.elapsedTime;
+  if(S.mode==='descenso'&&flightEnv.visible){updateFlight(dt,time)}
+  else{
+    if(S.e!==S.eGoal){const rate=S.tour?.2:.3;S.e=S.e<S.eGoal?Math.min(S.eGoal,S.e+dt*rate):Math.max(S.eGoal,S.e-dt*rate);if(REDUCED)S.e=S.eGoal;applyExplode();if(S.mode==='despiece')$('#expR').value=Math.round(S.e*100)}
+  }
+  stepTween(dt);
+  if(!tween)controls.update();
+  updateFlow(time);updateDims();layoutLabels(dt);
+  renderer.render(scene,camera);
+  requestAnimationFrame(frame);
+}
+
+/* ---------- INTERACCIÓN ---------- */
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
+$('#tourBtn').addEventListener('click',runTour);
+$('#xrayBtn').addEventListener('click',()=>setXray(!S.xray));
+$('#dimBtn').addEventListener('click',()=>{S.dims=!S.dims;setDimsPressed()});
+$('#rotBtn').addEventListener('click',()=>{S.auto=!S.auto;$('#rotBtn').setAttribute('aria-pressed',S.auto);controls.autoRotate=S.auto&&S.mode==='modelo'});
+if(REDUCED){S.auto=false;$('#rotBtn').setAttribute('aria-pressed',false)}
+$('#expBtn').addEventListener('click',()=>{S.eGoal=S.eGoal>.5?0:1;updateExpBtn();if(S.eGoal===0)select(null)});
+$('#expR').addEventListener('input',e=>{S.e=S.eGoal=e.target.value/100;applyExplode();updateExpBtn()});
+$('#flowBtn').addEventListener('click',()=>{S.flow=!S.flow;$('#flowBtn').setAttribute('aria-pressed',S.flow)});
+$('#lblBtn').addEventListener('click',()=>{S.labels=!S.labels;$('#lblBtn').setAttribute('aria-pressed',S.labels)});
+$('#openReq').addEventListener('click',()=>{$('#req').hidden=false;$('#reqX').focus()});
+$('#reqX').addEventListener('click',()=>{$('#req').hidden=true;$('#openReq').focus()});
+$('#cardX').addEventListener('click',()=>select(null));
+addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('#req').hidden)$('#req').hidden=true;else if(S.sel)select(null);else stopTour()}});
+$('#playBtn').addEventListener('click',()=>{
+  if(fl.playing){fl.playing=false;$('#playBtn').textContent='Continuar';return}
+  if(fl.t>=fl.end){fl.t=0;fl.lastPacket=-1;fl.userCam=false}
+  fl.playing=true;$('#playBtn').textContent='Pausa';
+});
+$('#timeR').addEventListener('input',e=>{fl.t=e.target.value/1000*fl.end;fl.playing=false;$('#playBtn').textContent='Continuar';drawCharts(fl.t)});
+function rebuild(){const f=fl.t/fl.end;buildProfile();fl.t=f*fl.end}
+$('#velR').addEventListener('input',e=>{fl.v=+e.target.value;$('#velO').textContent=fl.v+' m/s';rebuild()});
+$('#altS').addEventListener('change',e=>{fl.h0=+e.target.value;rebuild()});
+controls.addEventListener('start',()=>{if(S.mode==='descenso')fl.userCam=true;if(S.tour)stopTour();});
+
+/* Clic sobre piezas */
+const ray=new THREE.Raycaster(),ptr=new THREE.Vector2();let down=null;
+renderer.domElement.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY]});
+renderer.domElement.addEventListener('pointerup',e=>{
+  if(!down||S.mode==='descenso')return;
+  if(Math.hypot(e.clientX-down[0],e.clientY-down[1])>6)return;
+  if(tween)return;
+  ptr.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);ray.setFromCamera(ptr,camera);
+  const hits=ray.intersectObjects(Object.values(bodies).map(b=>b.g),true).filter(h=>h.object.userData.cat&&h.object.visible&&!(S.xray&&(h.object.userData.cat==='estructura'||h.object.userData.cat==='paracaidas')));
+  select(hits.length?hits[0].object.userData.cat:null);
+});
+
+/* Arranque */
+scene.environment=envStudio;
+applyExplode();
+fl.sph=new THREE.Spherical(40,1.4,.7);
+const start=(location.hash||'').slice(1);
+const initial=['modelo','despiece','descenso'].includes(start)?start:'modelo';
+S.mode='__';
+camera.position.set(30,8,60);controls.target.set(0,6,0);
+setMode(initial,true);
+if(initial==='despiece'){S.e=0}
+const Q=new URLSearchParams(location.search);
+if(Q.has('still')){tween=null;controls.enabled=true;controls.autoRotate=false;const v=VIEW[initial];if(v){const s=new THREE.Spherical().setFromVector3(new THREE.Vector3(...v.d));s.radius=v.r*fit();controls.target.set(...v.t);camera.position.setFromSpherical(s).add(controls.target);S.e=S.eGoal;applyExplode()}if(Q.has('xray'))setXray(true);if(Q.has('sel'))select(Q.get('sel'));if(Q.has('zoom')){const s=new THREE.Spherical().setFromVector3(new THREE.Vector3(...JSON.parse(Q.get('dir'))));s.radius=+Q.get('zoom');controls.target.set(0,+Q.get('ty'),0);camera.position.setFromSpherical(s).add(controls.target)}if(Q.has('t')){fl.t=+Q.get('t');fl.userCam=false;for(let i=0;i<200;i++)updateFlight(.05,i*.05)}if(Q.has('req'))$('#req').hidden=false}
+if(initial==='descenso'&&/autoplay/.test(location.search)){fl.playing=true}
+addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(['modelo','despiece','descenso'].includes(h))setMode(h)});
+requestAnimationFrame(frame);
+})();
+</script>
