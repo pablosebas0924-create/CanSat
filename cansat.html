@@ -14,6 +14,7 @@
   --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
   --gl:max(16px,env(safe-area-inset-left,0px)); --gr:max(16px,env(safe-area-inset-right,0px));
 }
+[hidden]{display:none!important}
 html,body{height:100%;overflow:hidden}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px;line-height:1.45}
 button,select,input{font:inherit;color:inherit}
@@ -117,7 +118,27 @@ body.flight #cap{left:auto;right:var(--gr);top:60px;bottom:auto;transform:none;w
 .rq em{font:400 11px/1.3 var(--mono);font-style:normal;color:var(--muted)}
 .rq em.pend{color:var(--amber)} .rq em.ok{color:var(--ok)}
 #err{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;background:var(--bg)}
+#therm{position:fixed;right:var(--gr);bottom:calc(84px + env(safe-area-inset-bottom,0px));width:300px;background:var(--panel);border:1px solid var(--amber);border-radius:5px;padding:9px 12px 10px}
+.thh{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;margin-bottom:7px}
+.thh b{font:700 17px/1.1 var(--display);letter-spacing:.03em}
+.thh>span{font:400 10.5px var(--mono);color:var(--amber)}
+.seg{margin-left:auto;display:flex;border:1px solid var(--line);border-radius:3px;overflow:hidden}
+.seg button{background:none;border:0;padding:3px 7px;font:500 10.5px var(--mono);color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+#thc{display:block;width:100%;aspect-ratio:4/3;background:#05080c;border-radius:2px}
+.cbar{display:flex;align-items:center;gap:6px;margin-top:6px;font:400 10px var(--mono);color:var(--muted)}
+.cbar i{flex:1;height:7px;border-radius:2px;background:linear-gradient(90deg,#000004,#1b0c41,#4a0c6b,#781c6d,#a52c60,#cf4446,#ed6925,#fb9b06,#f7d13d,#fcffa4)}
+#thInfo{margin-top:6px;font:400 11px/1.45 var(--mono);color:var(--muted);min-height:4.35em}
+#thInfo b{color:var(--fg);font-weight:500}
+#thInfo .det{color:var(--cyan)}
+@media (min-width:761px) and (max-height:720px){#therm{width:240px}}
 @media (max-width:760px){
+  #therm{top:214px;bottom:auto;width:min(190px,calc(50vw - 16px));padding:6px 8px}
+  .thh{margin-bottom:4px}
+  .thh>span,.seg{display:none}
+  .thh b{font-size:14px}
+  #thInfo{font-size:9.5px;min-height:0}
+  .cbar{font-size:9px;margin-top:4px}
   .brand p{display:none}
   .brand h1{font-size:20px}
   .tabs{order:3;width:100%}
@@ -183,10 +204,11 @@ body.flight #cap{left:auto;right:var(--gr);top:60px;bottom:auto;transform:none;w
   <label class="fld" for="timeR">T+ <input id="timeR" type="range" min="0" max="1000" value="0" aria-label="Línea de tiempo"><output id="timeO">0 s</output></label>
   <label class="fld" for="velR">Descenso <input id="velR" type="range" min="8" max="12" step="0.5" value="10" style="width:84px"><output id="velO">10 m/s</output></label>
   <label class="fld" for="altS">Liberación <select id="altS"><option value="500">500 m</option><option value="750">750 m</option><option value="1000" selected>1000 m</option></select></label>
+  <button class="btn" id="thBtn" aria-pressed="true">Cámara térmica</button>
 </div></div>
 
 <aside id="hud" hidden aria-label="Telemetría simulada">
-  <div class="sim">SIMULACIÓN. Presión y temperatura: atmósfera ISA. Humedad y viento: perfiles de ejemplo. No son datos de vuelo.</div>
+  <div class="sim">SIMULACIÓN. Presión y temperatura: atmósfera ISA. Humedad, viento y terreno térmico: ejemplos. No son datos de vuelo.</div>
   <dl class="vals">
     <div><dt>Altitud</dt><dd id="vAlt">–</dd></div>
     <div><dt>Velocidad</dt><dd id="vVel">–</dd></div>
@@ -195,10 +217,18 @@ body.flight #cap{left:auto;right:var(--gr);top:60px;bottom:auto;transform:none;w
     <div><dt>Humedad ej.</dt><dd id="vH">–</dd></div>
     <div><dt>Viento ej.</dt><dd id="vW">–</dd></div>
   </dl>
-  <code id="pkt" title="Paquete: identificador, segundo, presión, temperatura, humedad y deriva">AB1</code>
+  <code id="pkt" title="Paquete: identificador, segundo, presión, temperatura, humedad, deriva y temperatura máxima del suelo. Además lleva una miniatura térmica de 8 × 6 (48 bytes)">AB1</code>
   <canvas id="c1" aria-label="Altitud frente a tiempo"></canvas>
   <canvas id="c2" aria-label="Temperatura frente a altitud"></canvas>
   <div id="hudfoot"></div>
+</aside>
+
+<aside id="therm" hidden aria-label="Vista simulada de la cámara térmica">
+  <div class="thh"><b>Cámara térmica</b><span>MLX90640 · 55° × 35°</span>
+    <div class="seg" role="group" aria-label="Resolución de la imagen"><button id="thSD" type="button" aria-pressed="true" title="Imagen completa guardada en la microSD">SD 32×24</button><button id="thRadio" type="button" aria-pressed="false" title="Miniatura que se envía por radio cada segundo">Radio 8×6</button></div></div>
+  <canvas id="thc" aria-label="Imagen térmica simulada del suelo bajo el CanSat"></canvas>
+  <div class="cbar"><span>20 °C</span><i></i><span>65 °C</span></div>
+  <div id="thInfo"></div>
 </aside>
 
 <div id="cap" hidden><b id="capT"></b><span id="capS"></span></div>
@@ -209,16 +239,26 @@ body.flight #cap{left:auto;right:var(--gr);top:60px;bottom:auto;transform:none;w
   <h2>Ficha técnica de ÁBREGO-1</h2>
   <p>Propuesta con marcas, modelos y misión secundaria elegidos para este CanSat. Los requisitos vienen de las <a href="https://esero.es/wp-content/uploads/2026/09/bases-del-desafio-cansat-2026-2027.pdf" target="_blank" rel="noopener">bases CanSat 2026/2027 de ESERO Spain</a>.</p>
 
-  <h3>Misión secundaria: perfil de viento y humedad</h3>
-  <p class="m"><b>Pregunta.</b> ¿Cómo cambian el viento y la humedad en el primer kilómetro de atmósfera sobre el lugar de lanzamiento?</p>
-  <p class="m"><b>Por qué interesa.</b> Esta capa condiciona la dispersión de contaminantes y la formación de nubes bajas. La misión Aeolus de la ESA midió perfiles de viento desde el espacio, y este CanSat lo hace localmente durante su descenso.</p>
-  <p class="m"><b>Método.</b> Un paracaídas deriva casi con el viento, así que el cambio de posición GNSS permite estimarlo a cada altitud. El LSM6DSOX marca la apertura y el balanceo para filtrar esos datos. El SHT45 aporta la humedad y, con el TMP117, el punto de rocío.</p>
+  <h3>Misión secundaria: VIGÍA, sonda para incendios forestales</h3>
+  <p class="m"><b>Pregunta.</b> ¿Puede una sonda lanzable de bajo coste dar, en menos de dos minutos, la información meteorológica y térmica que necesita el puesto de mando de un incendio forestal?</p>
+  <p class="m"><b>Por qué interesa.</b> En 2025 ardieron en España más de 350.000 ha. Las decisiones se toman con estaciones que pueden estar a decenas de kilómetros y con modelos de varios kilómetros de resolución. El viento local, la humedad del combustible fino y la estabilidad del aire sobre el fuego no se miden in situ. La futura misión térmica LSTM de Copernicus aborda el mismo problema desde el espacio.</p>
+  <p class="m"><b>Método.</b></p>
+  <ul class="mis">
+    <li><b>O1 · Perfil vertical.</b> El paracaídas deriva casi con el viento, así que la posición GNSS da el viento a cada altitud. Con el TMP117 y el SHT45 se obtienen el gradiente térmico, las inversiones y el punto de rocío.</li>
+    <li><b>O2 · Mapa térmico.</b> La MLX90640 mira al suelo y el BNO085 da su orientación para georreferenciar cada fotograma. Un píxel mide unos 30 m a 1000 m de altitud y unos 3 m a 100 m: la caída recorre del tamaño de píxel de Landsat al de un dron.</li>
+    <li><b>O3 · Modo centinela.</b> Tras aterrizar envía cada 30 s temperatura, humedad, humedad del combustible fino muerto y probabilidad de ignición, durante horas (R4).</li>
+    <li><b>O4 · Telecontrol.</b> Desde tierra se cambia el modo o la frecuencia de muestreo, se pide una imagen o se activa el zumbador.</li>
+  </ul>
   <p class="m"><b>Cómo se evalúa.</b></p>
   <ul class="mis">
-    <li>Perfiles de viento y humedad cada 50 m de altitud.</li>
+    <li>Viento comparado con un anemómetro en tierra y con un reanálisis como ERA5: diferencia media objetivo inferior a 2 m/s.</li>
+    <li>Detección de un blanco térmico de 3 × 3 m, como una lona negra al sol, y curva de detectabilidad frente a altitud. Si no se puede colocar, se usan contrastes naturales: caminos, edificios o agua.</li>
+    <li>Mosaico térmico comparado con la temperatura de superficie de Landsat 8/9 de la zona.</li>
+    <li>Humedad del combustible calculada frente a muestras reales pesadas, secadas en horno y pesadas de nuevo.</li>
     <li>Más del 90 % de los paquetes recibidos o recuperados de la microSD.</li>
-    <li>Viento comparado con un reanálisis como ERA5: diferencia media objetivo inferior a 2 m/s.</li>
   </ul>
+  <p class="m"><b>Niveles de alcance.</b> Nivel 1, garantizado: O1 y O3. Nivel 2: imagen térmica y detección de focos. Nivel 3: mosaico georreferenciado, curva de detectabilidad y telecontrol completo.</p>
+  <p class="m"><b>Sobre la simulación.</b> En la pestaña Descenso, el panel térmico muestra el terreno del modelo visto por la cámara. Cada píxel promedia todo lo que cubre en el suelo, así que el blanco de 3 × 3 m no se distingue desde arriba y aparece al bajar. Un foco real de incendio, a cientos de grados, se vería desde mucho más alto. La escala Sentinel-2 se refiere al tamaño de píxel: Sentinel-2 no tiene banda térmica.</p>
 
   <h3>Lista de materiales</h3>
   <p class="m">Masas y costes orientativos, sin IVA ni envío. Las piezas enlazadas se han comprobado en la web del fabricante o la tienda. Revisa el resto antes de comprar.</p>
@@ -249,11 +289,11 @@ const AF='https://www.adafruit.com/product/';
 /* [grupo, pieza, modelo, cantidad, masa total g, coste total € orientativo, enlace] */
 const BOM=[
  ['Estructura','Tubo de lata','Aluminio 6063, Ø66 × 1,2 mm, mecanizado',1,65,12],
- ['Estructura','Tapas superior e inferior','PETG impreso en 3D',2,24,2],
+ ['Estructura','Tapas superior e inferior','PETG impreso en 3D, la inferior con ventana de Ø12 mm para la cámara',2,24,2],
  ['Estructura','Bandejas internas','PETG impreso en 3D, 1,5 mm',6,21,2],
  ['Estructura','Varillas y tuercas','M3 inox A2, 3 varillas y 24 tuercas',1,22,4],
  ['Estructura','Cáncamo de anclaje','M4 inox A2, atraviesa la tapa',1,4,1],
- ['Estructura','Lastre','Disco de latón Ø50 × 4 mm',1,66,6],
+ ['Estructura','Lastre','Anillo de latón Ø62/Ø40 × 4 mm, deja libre el centro',1,60,8],
  ['Sensores','Presión','Adafruit BMP390 (ID 4816)',1,1.7,10,AF+'4816'],
  ['Sensores','Temperatura del aire','Adafruit TMP117 (ID 4821)',1,1.7,11,AF+'4821'],
  ['Placa','Microcontrolador y registro','Adafruit Feather RP2040 Adalogger (ID 5980)',1,6,14,AF+'5980'],
@@ -264,21 +304,23 @@ const BOM=[
  ['Controles','Interruptores','E-Switch EG1218, deslizantes',2,4,2],
  ['Comunicaciones','Radio LoRa','Adafruit RFM96W 433 MHz (ID 3073)',1,3.1,18,AF+'3073'],
  ['Comunicaciones','Antena','Linx ANT-433-HETH, helicoidal',1,3.3,6],
- ['Comunicaciones','Latiguillo y conector','Coaxial con conector uFL',1,1,1],
+ ['Comunicaciones','Latiguillo y conector','Coaxial de 15 cm con conector uFL, de la radio a la base',1,2,3],
+ ['Misión secundaria','Cámara térmica 32 × 24','Adafruit MLX90640 55° (ID 4407)',1,3.5,70,AF+'4407'],
+ ['Misión secundaria','Orientación absoluta','Adafruit BNO085 (ID 4754)',1,2.5,28,AF+'4754'],
  ['Misión secundaria','Humedad','Adafruit SHT45 (ID 5665)',1,1.7,12,AF+'5665'],
- ['Misión secundaria','Acelerómetro y giroscopio','Adafruit LSM6DSOX (ID 4438)',1,1.7,11,AF+'4438'],
  ['Misión secundaria','Receptor GNSS','SparkFun MAX-M10S (GPS-18037)',1,7,42,'https://www.sparkfun.com/sparkfun-gnss-receiver-breakout-max-m10s-qwiic.html'],
  ['Misión secundaria','Antena GNSS y latiguillo','Adafruit parche 9 × 9 mm (ID 2460) y uFL–SMA (ID 851)',1,4,8],
  ['Misión secundaria','Zumbador de localización','Piezo PS1240 (Adafruit ID 160)',1,1,2],
- ['Paracaídas','Paracaídas','Ripstop de nailon naranja, Ø30 cm, 8 gajos, cuerda de Dyneema',1,20,12]
+ ['Paracaídas','Paracaídas','Ripstop de nailon naranja, Ø30 cm, 8 gajos, cuerda de Dyneema',1,20,12],
+ ['Paracaídas','Destorcedor','Destorcedor de bolas inox entre cáncamo y cuerdas',1,2,3]
 ];
 const TOTAL_G=BOM.reduce((a,b)=>a+b[4],0),TOTAL_E=BOM.reduce((a,b)=>a+b[5],0);
 const fmtN=(x,d=0)=>x.toFixed(d).replace('.',',');
 
 const CATS={
  estructura:{n:1,name:'Estructura',short:'Estructura',status:'R1 · R2 · R9',anchorBody:'shell',anchor:[3.3,10,0],side:'L',
-  fn:'Tubo de aluminio de Ø66 × 115 mm con dos tapas de PETG y una columna de tres varillas M3 que sostiene seis bandejas. El lastre de latón completa la masa y baja el centro de gravedad.',
-  parts:['Tubo de aluminio 6063 con pared de 1,2 mm','Tapas y bandejas de PETG impresas en 3D','3 varillas M3 inox A2','Lastre: disco de latón Ø50 × 4 mm, unos 66 g'],
+  fn:'Tubo de aluminio de Ø66 × 115 mm con dos tapas de PETG y una columna de tres varillas M3 que sostiene seis bandejas. El lastre de latón completa la masa, baja el centro de gravedad y deja libre el centro de la base para la cámara térmica.',
+  parts:['Tubo de aluminio 6063 con pared de 1,2 mm','Tapas y bandejas de PETG impresas en 3D. La tapa inferior tiene una ventana de Ø12 mm','3 varillas M3 inox A2','Lastre: anillo de latón Ø62/Ø40 × 4 mm, unos 60 g, alrededor de la cámara'],
   req:['<span class="ref">R1</span> Volumen de 115 mm de altura y 66 mm de diámetro antes de la liberación.','<span class="ref">R2</span> Masa total entre 300 y 350 g, con lastre si hace falta.','<span class="ref">R9</span> Soportar hasta 20 g en el lanzamiento.'],
   check:'Pesar el conjunto real y ajustar el lastre. Hacer una prueba de vibración y carga para respaldar los 20 g.'},
  sensores:{n:2,name:'Sensores de misión primaria',short:'Sensores',status:'§3.1 · obligatorio',anchorBody:'sensors',anchor:[1.35,6.95,.3],side:'R',
@@ -287,13 +329,13 @@ const CATS={
   req:['<span class="ref">§3.1</span> Medir temperatura del aire y presión atmosférica, y transmitirlas en vuelo.','Gráficas tras el vuelo, por ejemplo altitud frente a tiempo o temperatura frente a altitud.'],
   check:'El TMP117 mide la temperatura de su entorno, así que hay que comprobar que el aire llega hasta él y medir su retardo térmico dentro de la lata.'},
  placa:{n:3,name:'Placa electrónica',short:'Placa electrónica',status:'§3 · RP2040',anchorBody:'pcb',anchor:[-2,6.0,.6],side:'L',
-  fn:'Lee todos los sensores, guarda los datos en la microSD a 10 Hz y envía un paquete por radio cada segundo. Es el centro de todas las conexiones.',
-  parts:['Adafruit Feather RP2040 Adalogger: 50,8 × 22,8 mm','Tarjeta microSD de 16 GB','Registro local por si se pierde parte de la telemetría'],
+  fn:'Lee todos los sensores, guarda los datos en la microSD a 10 Hz y los fotogramas térmicos a 8 por segundo, y envía un paquete por radio cada segundo. Es el centro de todas las conexiones.',
+  parts:['Adafruit Feather RP2040 Adalogger: 50,8 × 22,8 mm','Tarjeta microSD de 16 GB: unos 12 kB/s de imagen térmica, 1,2 MB por vuelo','La cámara va en el segundo bus I²C del RP2040 a 1 MHz para no frenar al resto','En tierra calcula la humedad del combustible y la probabilidad de ignición'],
   req:['Las bases piden programar el CanSat, transmitir los datos y recuperarlos tras el vuelo.','<span class="ref">R3</span> Sin LiPo: el conector JST de batería de la placa queda sin usar.','<span class="ref">R14</span> Coste de los componentes de vuelo: 500 € como máximo.'],
-  check:'Alimentar la placa con 4,8 V nominales (hasta unos 5,6 V recién cargada) por el pin USB. Confirmar en banco que no daña el regulador antes de volar.'},
+  check:'Alimentar la placa con 4,8 V nominales (hasta unos 5,6 V recién cargada) por el pin USB. Confirmar en banco que no daña el regulador antes de volar. Comprobar que escribir la imagen térmica en la microSD no retrasa la telemetría.'},
  bateria:{n:4,name:'Batería',short:'Batería',status:'R3 · R4 · sin LiPo',anchorBody:'battery',anchor:[1.3,3,1.6],side:'R',
   fn:'Cuatro celdas NiMH AAA en serie dan 4,8 V nominales y unos 750 mAh. Se sacan de frente por la ventana lateral sin abrir la lata.',
-  parts:['4 × Panasonic eneloop AAA BK-4MCCE','2 portapilas 2 × AAA apilados','Consumo medio estimado: 75 mA','Autonomía estimada: unas 8 h, con un margen del 15 %'],
+  parts:['4 × Panasonic eneloop AAA BK-4MCCE','2 portapilas 2 × AAA apilados','Consumo medio estimado: 105 mA, de ellos unos 23 mA de la cámara térmica','Autonomía estimada: unas 6 h, con un margen del 15 %. El modo centinela apaga la cámara y la alarga'],
   req:['<span class="ref">R3</span> Las baterías LiPo están prohibidas.','<span class="ref">R4</span> Al menos 4 h seguidas encendido y baterías fácilmente accesibles.'],
   check:'Medir el consumo real y hacer una prueba de descarga de 4 h con todo encendido.'},
  controles:{n:5,name:'Interruptor y control de radio',short:'Interruptor y radio',status:'R5 · R11',anchorBody:'controls',anchor:[.68,4.8,2.9],side:'R',
@@ -301,27 +343,33 @@ const CATS={
   parts:['2 × E-Switch EG1218 deslizantes','Placa frontal rotulada PWR y TX','Accesibles sin desmontar nada'],
   req:['<span class="ref">R5</span> Interruptor general fácilmente accesible.','<span class="ref">R11</span> Sistema accesible para activar o desactivar la transmisión.'],
   check:'Comprobar que no cambian de posición con las vibraciones del lanzamiento. Si se mueven, añadir un seguro.'},
- comms:{n:6,name:'Sistema de comunicaciones',short:'Comunicaciones',status:'R10 · R11 · R12',anchorBody:'comms',anchor:[-1.4,1.2,.5],side:'L',
-  fn:'Radio LoRa con la antena en la base, fuera de la lata, porque el aluminio bloquearía la señal. Envía un paquete por segundo a la estación terrena.',
-  parts:['Adafruit RFM96W LoRa, 433 MHz, frecuencia configurable por programa','Linx ANT-433-HETH helicoidal en la base','Cada paquete empieza con el identificador AB1 y lleva CRC'],
-  req:['<span class="ref">R10</span> Usar la frecuencia asignada por la organización y poder cambiarla.','<span class="ref">R12</span> Identificar sin ambigüedad los datos propios.','<span class="ref">R1</span> Antena solo arriba o abajo, dentro del Ø66 mm antes de la liberación.'],
-  check:'La banda de 433 MHz es una suposición hasta que la organización asigne frecuencia. Ajustar la potencia a lo permitido, medir el alcance y confirmar la altura de la antena en su hoja de datos (aquí 12 mm).'},
+ comms:{n:6,name:'Sistema de comunicaciones',short:'Comunicaciones',status:'R10 · R11 · R12',anchorBody:'antenna',anchor:[-1.5,-.6,-.7],side:'L',
+  fn:'Radio LoRa en la bandeja superior, sobre el GNSS. La antena va en la base, fuera de la lata porque el aluminio bloquearía la señal, y desplazada del centro para no entrar en el campo de visión de la cámara térmica. Envía un paquete por segundo y escucha telecomandos entre envíos.',
+  parts:['Adafruit RFM96W LoRa, 433 MHz, frecuencia configurable por programa','Linx ANT-433-HETH helicoidal en la base, a 17 mm del eje','Latiguillo coaxial de 15 cm por el lateral interior','Cada paquete empieza con AB1, lleva CRC y una miniatura térmica de 8 × 6 (48 bytes)'],
+  req:['<span class="ref">R10</span> Usar la frecuencia asignada por la organización y poder cambiarla.','<span class="ref">R12</span> Identificar sin ambigüedad los datos propios.','<span class="ref">R1</span> Antena solo arriba o abajo, dentro del Ø66 mm antes de la liberación.','<span class="ref">§3.3</span> El telecontrol es uno de los ejemplos de misión secundaria.'],
+  check:'La banda de 433 MHz es una suposición hasta que la organización asigne frecuencia. Ajustar la potencia a lo permitido, medir el alcance y confirmar la altura de la antena en su hoja de datos (aquí 12 mm). Respetar el ciclo de trabajo de la banda (en 433 MHz suele ser del 10 %) con la miniatura incluida.'},
  paracaidas:{n:7,name:'Paracaídas',short:'Paracaídas',status:'R6 · R7 · R8',anchorBody:'chute',anchor:[2.7,13.2,0],side:'R',
-  fn:'Ø30 cm para descender a unos 10 m/s con 327 g. Plegado va sobre la tapa superior y ocupa 30 mm, sin rebasar el diámetro de la lata.',
-  parts:['Ripstop de nailon naranja, 8 gajos','Cuerdas de Dyneema de 1 mm','Unido al cáncamo M4 que atraviesa la tapa'],
+  fn:`Ø30 cm para descender a unos 10 m/s con ${fmtN(TOTAL_G)} g. Plegado va sobre la tapa superior y ocupa 30 mm, sin rebasar el diámetro de la lata. Un destorcedor reduce el giro del CanSat, que emborronaría la imagen térmica.`,
+  parts:['Ripstop de nailon naranja, 8 gajos','Cuerdas de Dyneema de 1 mm','Destorcedor de bolas inox entre el cáncamo y las cuerdas','Unido al cáncamo M4 que atraviesa la tapa'],
   req:['<span class="ref">R6</span> Reutilizable. Se recomiendan colores llamativos.','<span class="ref">R7</span> La unión debe soportar al menos 50 N, con pruebas previas.','<span class="ref">R8</span> Se recomiendan 8–12 m/s y 120 s de vuelo como máximo.','<span class="ref">R1</span> Puede sobresalir hasta 45 mm en altura.'],
-  check:'El diámetro supone Cd 0,75. Medir la velocidad real en una prueba de caída y hacer el ensayo de tracción de 50 N.'},
- secundaria:{n:8,name:'Misión secundaria',short:'Misión secundaria',status:'§3.2 · viento',anchorBody:'gps',anchor:[-1.8,9.7,.5],side:'L',
-  fn:'Funciona como una radiosonda en miniatura: mide cómo cambian el viento y la humedad en el primer kilómetro de atmósfera. El viento se obtiene de la deriva del CanSat medida con GNSS.',
-  parts:['SparkFun MAX-M10S: posición GNSS, hasta 10 Hz','Adafruit SHT45: humedad, ±1 % HR típico entre 20 y 70 % HR','Adafruit LSM6DSOX: detecta la apertura y el balanceo, hasta ±16 g','Zumbador PS1240 y GNSS: localización tras aterrizar (R13)'],
-  req:['<span class="ref">§3.2</span> Elección libre, con objetivos claros y forma de evaluar los resultados.','<span class="ref">§3.3</span> Encaja con los ejemplos de telemetría avanzada y estudio de condiciones ambientales.','Debe cumplir los mismos requisitos técnicos y de presupuesto.'],
-  check:'Comprobar que el GNSS recupera posición tras la liberación. El retardo del SHT45 y la inercia del paracaídas limitan la resolución vertical a unos 50 m.'}
+  check:'El diámetro supone Cd 0,75. Medir la velocidad real en una prueba de caída y hacer el ensayo de tracción de 50 N, destorcedor incluido. Medir con el BNO085 cuánto gira el CanSat con y sin destorcedor.'},
+ secundaria:{n:8,name:'Misión secundaria: VIGÍA',short:'Misión VIGÍA',status:'§3.2 · incendios',anchorBody:'gps',anchor:[-1.8,9.7,.5],side:'L',
+  fn:'Prototipo de sonda lanzable para incendios forestales. En el descenso mide el perfil de viento, temperatura y humedad, y cartografía el suelo con la cámara térmica. Al aterrizar se queda horas como estación meteorológica y calcula el riesgo de ignición para el puesto de mando.',
+  parts:['SparkFun MAX-M10S: posición GNSS hasta 10 Hz. El viento sale de la deriva','Adafruit SHT45: humedad, ±1 % HR típico entre 20 y 70 % HR','Adafruit BNO085: orientación absoluta para georreferenciar la imagen térmica y detectar la liberación','Zumbador PS1240 y GNSS: localización tras aterrizar (R13)'],
+  req:['<span class="ref">§3.2</span> Elección libre, con objetivos claros y forma de evaluar los resultados.','<span class="ref">§3.3</span> Combina telemetría avanzada, telecontrol, estudio ambiental y observación del terreno.','<span class="ref">§8.2</span> Valor científico: 30 % de la nota, con atención especial a la misión secundaria.'],
+  check:'Comprobar que el GNSS recupera posición tras la liberación. El retardo del SHT45, de varios segundos, equivale a unos 40 m de caída y hay que corregirlo. Validar la humedad del combustible calculada con muestras pesadas y secadas en horno.'},
+ termica:{n:9,name:'Cámara térmica',short:'Cámara térmica',status:'§3.2 · MLX90640',anchorBody:'thermal',anchor:[1.2,1.3,.7],side:'R',
+  fn:'Cámara térmica de 32 × 24 píxeles que mira al suelo por la ventana de la tapa inferior. En el descenso cartografía la temperatura del terreno y busca focos calientes. Con 1,7° por píxel, cada píxel mide unos 30 m a 1000 m de altitud y unos 3 m a 100 m. Su vista simulada está en la pestaña Descenso.',
+  parts:['Adafruit MLX90640 de 55° × 35°: 768 píxeles, de –40 a 300 °C','8 fotogramas por segundo a la microSD y miniatura de 8 × 6 por radio','Cuelga bajo la bandeja de la batería y su lente queda a la altura de la ventana de Ø12 mm','Lastre en anillo y antena LoRa desplazada para dejar libre el campo de visión'],
+  req:['<span class="ref">§3.3</span> Encaja con los ejemplos de observación del terreno y telemetría avanzada.','<span class="ref">R1</span> No sobresale: mira desde dentro, a través de la tapa.','<span class="ref">R14</span> Es la pieza más cara, unos 70 €, y el total sigue por debajo de 500 €.'],
+  check:'El giro del CanSat emborrona la imagen: descartar fotogramas con el giroscopio y comprobar que el destorcedor ayuda. La temperatura medida depende de la emisividad del suelo, así que hay que contrastarla en tierra con un termómetro de infrarrojos. Al consultarla el 2 de noviembre de 2026 estaba agotada en Adafruit; buscar otro distribuidor con tiempo.'}
 };
+const SEC=new Set(['secundaria','termica']),NCATS=Object.keys(CATS).length;
 const REQS=[
- ['R1','Dimensiones','Ø66 × 115 mm antes de la liberación. Antenas solo arriba o abajo. Los elementos externos no sobresalen del diámetro y como máximo 45 mm en altura.','Cumplido en la geometría: 30 mm arriba + 12 mm de antena abajo = 42 mm. Altura de antena por confirmar.','ok'],
- ['R2','Masa','Masa total, con recuperación, entre 300 y 350 g. Lastre si hace falta.',`Estimación: ${fmtN(TOTAL_G)} g con 66 g de lastre. Hay que pesar el conjunto real.`,'pend'],
+ ['R1','Dimensiones','Ø66 × 115 mm antes de la liberación. Antenas solo arriba o abajo. Los elementos externos no sobresalen del diámetro y como máximo 45 mm en altura.','Cumplido en la geometría: 30 mm arriba + 12 mm de antena abajo = 42 mm. La cámara térmica mira desde dentro y no sobresale. Altura de antena por confirmar.','ok'],
+ ['R2','Masa','Masa total, con recuperación, entre 300 y 350 g. Lastre si hace falta.',`Estimación: ${fmtN(TOTAL_G)} g con 60 g de lastre en anillo. Hay que pesar el conjunto real.`,'pend'],
  ['R3','Seguridad de materiales','Sin explosivos, pirotecnia ni materiales inflamables o peligrosos, incluidas baterías LiPo.','Cumplido en el diseño: celdas NiMH y ninguna LiPo.','ok'],
- ['R4','Alimentación','Autónoma, con al menos 4 h encendido. Baterías fácilmente accesibles.','Estimación: unas 8 h. Acceso por la ventana lateral. Falta la prueba de descarga.','pend'],
+ ['R4','Alimentación','Autónoma, con al menos 4 h encendido. Baterías fácilmente accesibles.','Estimación: unas 6 h con la cámara térmica encendida. Acceso por la ventana lateral. Falta la prueba de descarga.','pend'],
  ['R5','Encendido y apagado','Interruptor general fácilmente accesible.','Cumplido: interruptor PWR en la ventana lateral.','ok'],
  ['R6','Sistema de recuperación','Paracaídas o equivalente, reutilizable. Colores llamativos recomendados.','Cumplido en el diseño: ripstop naranja reutilizable.','ok'],
  ['R7','Resistencia de la unión','La unión debe soportar al menos 50 N, con pruebas previas.','Cáncamo M4 y cuerda de Dyneema. Falta el ensayo de tracción.','pend'],
@@ -505,7 +553,7 @@ M.shellV=M.shell.clone();M.shellV.alphaMap=ventTex;M.shellV.alphaTest=.5;
 const decalTex=tex(cnv(1024,740,(g,w,h)=>{
   g.clearRect(0,0,w,h);g.fillStyle='#ff6a1f';g.fillRect(40,70,944,16);
   g.fillStyle='#0f1b26';g.textAlign='left';g.font='700 190px "Barlow Condensed","Arial Narrow",Arial,sans-serif';g.fillText('ÁBREGO-1',40,270);
-  g.font='600 62px "Barlow Condensed","Arial Narrow",Arial,sans-serif';g.fillText('SONDA DE VIENTO Y HUMEDAD',40,370);
+  g.font='600 62px "Barlow Condensed","Arial Narrow",Arial,sans-serif';g.fillText('SONDA DE INCENDIOS · VIGÍA',40,370);
   g.font='500 44px "IBM Plex Mono",Menlo,monospace';g.fillText('CANSAT · Ø66 × 115 mm',40,470);g.fillText('ID RADIO AB1',40,540);
 }));
 M.decal=std({map:decalTex,alphaTest:.4,roughness:.55,side:THREE.DoubleSide});
@@ -518,34 +566,50 @@ body('shell','estructura',[[0,11,0],[-8.4,7,-1.5]],[.14,.46],g=>{
   edgeQuad(g,RI,R,WIN[0],WIN[1],GAP/2,M.shell);edgeQuad(g,RI,R,WIN[0],WIN[1],-GAP/2,M.shell);
   const d=new THREE.Mesh(new THREE.CylinderGeometry(R+.006,R+.006,3.6,64,1,true,.85,1.5),M.decal);d.position.y=3.5;g.add(d);
 });
-const capProfile=[[0,0],[3.17,0],[3.17,.03],[3.3,.03],[3.3,.26],[3.24,.34],[0,.34]].map(p=>new THREE.Vector2(p[0],p[1]));
-body('bottomcap','estructura',[[0,-4.5,0]],[.7,.96],g=>{const m=mesh(new THREE.LatheGeometry(capProfile,96),M.cap);m.rotation.x=Math.PI;m.position.y=.34;g.add(m)});
-body('ballast','estructura',[[0,-2.4,0]],[.68,.94],g=>{g.add(cyl(2.5,.4,M.brass,0,.56,0,72))});
+const V2=a=>a.map(p=>new THREE.Vector2(p[0],p[1]));
+const capProfile=V2([[0,0],[3.17,0],[3.17,.03],[3.3,.03],[3.3,.26],[3.24,.34],[0,.34]]);
+/* Tapa inferior con ventana de Ø12 mm para la cámara térmica */
+const capProfileHole=V2([[.6,0],[3.17,0],[3.17,.03],[3.3,.03],[3.3,.26],[3.24,.34],[.6,.34],[.6,0]]);
+body('bottomcap','estructura',[[0,-4.5,0]],[.7,.96],g=>{const m=mesh(new THREE.LatheGeometry(capProfileHole,96),M.cap);m.rotation.x=Math.PI;m.position.y=.34;g.add(m)});
+/* Lastre en anillo Ø62/Ø40 × 4 mm: la cámara mira por el centro */
+body('ballast','estructura',[[0,-2.4,0]],[.68,.94],g=>{g.add(mesh(new THREE.LatheGeometry(V2([[2.0,.36],[3.1,.36],[3.1,.76],[2.0,.76],[2.0,.36]]),96),M.brass))});
 body('topcap','estructura',[[0,15,0]],[.06,.22],g=>{
   const m=mesh(new THREE.LatheGeometry(capProfile,96),M.cap,0,H-.34,0);g.add(m);
   const eye=mesh(new THREE.TorusGeometry(.26,.06,12,28),M.steel,0,H+.33,0);g.add(eye);
   g.add(cyl(.2,.05,M.steel,0,H+.02,0,6));g.add(cyl(.09,.14,M.steel,0,H+.05,0));
 });
-const RODS=[[2.47,1.43],[0,-2.85],[-2.47,1.43]],TRAYS=[.85,1.5,5.45,6.6,8.0,9.4];
+const RODS=[[2.47,1.43],[0,-2.85],[-2.47,1.43]],TRAYS=[1.5,5.45,6.6,8.0,9.4,10.55];
 body('frame','estructura',[[0,12,0],[8.4,7,-1.5]],[.3,.58],g=>{
   RODS.forEach(([x,z])=>{
     g.add(cyl(.15,H-.7,M.rod,x,H/2,z,14));
     TRAYS.forEach(y=>{g.add(cyl(.27,.11,M.steel,x,y+.14,z,6));g.add(cyl(.27,.11,M.steel,x,y-.14,z,6))});
   });
 });
-/* Radio y antena */
-body('comms','comms',[[0,.3,0]],[.62,.9],g=>{
-  tray(g,.85);
-  const top=brd(g,2.9,2.5,0,1.02,0,'RFM96W 433','#14181e','#27323e',.93);
+/* Radio en la bandeja superior, sobre el GNSS. La antena sigue en la base, desplazada del eje para no entrar en el campo de visión de la cámara */
+body('comms','comms',[[0,13.5,0]],[.36,.62],g=>{
+  tray(g,10.55);
+  const top=brd(g,2.9,2.5,0,10.66,0,'RFM96W 433','#14181e','#27323e',10.62);
   g.add(box(1.6,.25,1.6,M.can,.1,top+.125,-.2));
-  g.add(cyl(.11,.13,M.pin,1.25,top+.065,.9,16));
+  g.add(cyl(.11,.13,M.pin,-1.25,top+.065,-.9,16));
   addChip(g,-.95,top-.02,.65,.5,.42);
 });
+const ANT=[-1.5,-.7];
 body('antenna','comms',[[0,-6,0]],[.72,.98],g=>{
-  g.add(cyl(.28,.08,M.tray,0,-.04,0,24));
-  const pts=[];for(let i=0;i<=90;i++){const a=i/90;pts.push(new THREE.Vector3(.22*Math.cos(a*TAU*7),-.1-a*1.06,.22*Math.sin(a*TAU*7)))}
+  const [ax,az]=ANT;
+  g.add(cyl(.28,.08,M.tray,ax,-.04,az,24));
+  const pts=[];for(let i=0;i<=90;i++){const a=i/90;pts.push(new THREE.Vector3(ax+.22*Math.cos(a*TAU*7),-.1-a*1.06,az+.22*Math.sin(a*TAU*7)))}
   g.add(sh(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),260,.035,6,false),M.copper)));
-  g.add(cyl(.05,.1,M.copper,.22,-.09,0,10));
+  g.add(cyl(.05,.1,M.copper,ax+.22,-.09,az,10));
+});
+/* Cámara térmica: MLX90640 colgada bajo la bandeja de la batería. La lente queda a la altura de la ventana de la tapa inferior */
+M.lens=std({color:0x1f242b,metalness:.7,roughness:.12});
+body('thermal','termica',[[0,-1.2,0]],[.6,.88],g=>{
+  brd(g,2.57,1.77,0,1.25,0,'MLX90640 55°','#14181e','#27323e',null);
+  g.add(cyl(.46,1.13,M.can,0,.685,0,32));
+  g.add(cyl(.36,.04,M.can,0,.1,0,32));
+  g.add(cyl(.26,.02,M.lens,0,.075,0,28));
+  g.add(box(.42,.2,.3,M.ivory,.9,1.15,.55));
+  [[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([a,b])=>g.add(cyl(.09,.03,M.steel,a*1.05,1.425,b*.66,8)));
 });
 /* Alimentación: cuatro AAA en dos portapilas apilados, eje hacia la ventana */
 body('battery','bateria',[[0,2.2,0]],[.6,.88],g=>{
@@ -595,13 +659,13 @@ body('sensors','sensores',[[0,7,0]],[.52,.8],g=>{
   addChip(g,1.35,y2-.03,-.25,.3,.3,.06);qt(g,2.15,y2,.45);
   g.add(tubeCurve([[-1.9,y1+.14,.45],[-.8,y1+.5,.9],[.8,y1+.5,.9],[1.9,y2+.14,.45]],.035,M.wireC));
 });
-/* Misión secundaria: humedad y movimiento */
+/* Misión secundaria: humedad y orientación */
 body('secondary','secundaria',[[0,9.5,0]],[.48,.76],g=>{
   tray(g,8.0);
   const y1=brd(g,2.55,1.77,1.35,8.22,-.1,'SHT45','#14181e','#27323e',8.07);
   addChip(g,1.35,y1-.03,-.25,.2,.2,.06);qt(g,2.15,y1,.45);
-  const y2=brd(g,2.56,1.78,-1.35,8.22,-.1,'LSM6DSOX','#14181e','#27323e',8.07);
-  addChip(g,-1.35,y2-.03,-.25,.3,.3,.07);qt(g,-2.15,y2,.45);
+  const y2=brd(g,2.56,2.27,-1.35,8.22,-.1,'BNO085','#14181e','#27323e',8.07);
+  addChip(g,-1.35,y2-.03,-.25,.38,.52,.08);qt(g,-2.15,y2,.45);
   g.add(tubeCurve([[-1.9,y2+.14,.45],[-.8,y2+.5,.9],[.8,y2+.5,.9],[1.9,y1+.14,.45]],.035,M.wireA));
 });
 /* GNSS y zumbador */
@@ -637,8 +701,9 @@ body('chute','paracaidas',[[0,20,0]],[0,.18],g=>{
 /* Cableado entre niveles: solo visible con el conjunto montado */
 const harness=new THREE.Group();canRoot.add(harness);
 [
- [[[-1.5,1.3,1.0],[-2.5,2.6,.1],[-2.55,4.5,.1],[-2.3,6,.9]],.05,M.ribbon],
- [[[1.25,1.2,.9],[1.3,.6,1.8],[.4,.35,1.0],[0,.2,.25]],.03,M.wireK],
+ [[[-2.3,6.1,.9],[-2.75,7.4,.2],[-2.85,9.3,-.3],[-2.2,10.4,.4],[-1.4,10.75,.9]],.05,M.ribbon],
+ [[[-1.25,10.9,-.9],[-2.2,10.3,-1.6],[-2.6,8,-1.6],[-2.75,5,-1.5],[-2.75,2.5,-1.5],[-1.75,1.0,-.8],[-1.5,.15,-.7]],.03,M.wireK],
+ [[[.9,1.05,.6],[1.6,1.2,1.3],[1.8,3,1.5],[1.9,4.6,.2],[1.6,5.5,-1.3],[1.2,5.95,-1.05]],.03,M.wireA],
  [[[2.2,6.1,-.7],[2.55,6.5,-.4],[2.3,6.95,.45]],.03,M.wireC],
  [[[-2.15,7.1,.45],[-2.7,7.8,.3],[-2.15,8.5,.45]],.03,M.wireC],
  [[[2.15,8.5,.45],[2.6,9.2,.6],[-1.8,10.0,-.9]],.03,M.wireA],
@@ -690,8 +755,9 @@ const ROUTES=[
  {a:['secondary',[1.9,8.3,.6]],b:['pcb',[2.2,6,.6]],c:0xf5b13d},
  {a:['gps',[-1.8,9.8,-.9]],b:['pcb',[1.9,6,-.8]],c:0xf5b13d},
  {a:['patch',[1.6,11.6,0]],b:['gps',[1.75,9.9,.1]],c:0xf5b13d},
- {a:['pcb',[-1.5,5.9,1]],b:['comms',[-1.3,1.2,.9]],c:0x59d0ee},
- {a:['comms',[1.25,1.25,.9]],b:['antenna',[0,-.1,0]],c:0x59d0ee},
+ {a:['pcb',[-1.5,5.9,1]],b:['comms',[-1.3,10.7,.9]],c:0x59d0ee},
+ {a:['comms',[-1.25,10.9,-.9]],b:['antenna',[ANT[0],-.1,ANT[1]]],c:0x59d0ee},
+ {a:['thermal',[.6,1.25,.6]],b:['pcb',[.6,5.9,.6]],c:0xf5b13d},
  {a:['battery',[-1.2,4.1,-1]],b:['pcb',[-1.2,5.8,-1]],c:0xff7566},
  {a:['controls',[-.68,4.8,2.7]],b:['battery',[-.6,4.1,2.2]],c:0xff7566}
 ].map(r=>{
@@ -718,6 +784,7 @@ const canopyGeo=new THREE.BufferGeometry();
 const canopy=sh(new THREE.Mesh(canopyGeo,std({vertexColors:true,roughness:.8,side:THREE.DoubleSide,envMapIntensity:.32})));canopy.frustumCulled=false;deploy.add(canopy);
 const lineMeshes=Array.from({length:GORES},()=>{const m=sh(new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,1,6),M.cord));deploy.add(m);return m});
 const riser=sh(new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,1,6),M.cord));deploy.add(riser);
+const swivel=sh(new THREE.Mesh(new THREE.CylinderGeometry(.14,.14,.6,12),M.steel));deploy.add(swivel);const _sw=new THREE.Vector3();
 const _a=new THREE.Vector3(),_b=new THREE.Vector3(),_up=new THREE.Vector3(0,1,0),_q=new THREE.Quaternion();
 function stretch(m,a,b){_a.subVectors(b,a);const l=_a.length()||.001;m.position.copy(a).addScaledVector(_a,.5);m.scale.set(1,l,1);m.quaternion.copy(_q.setFromUnitVectors(_up,_a.divideScalar(l)))}
 function updateCanopy(Rc,s,c,time,ext,Ll,Lr){
@@ -735,6 +802,7 @@ function updateCanopy(Rc,s,c,time,ext,Ll,Lr){
   canopyGeo.attributes.position.needsUpdate=true;canopyGeo.computeVertexNormals();
   const conf=new THREE.Vector3(0,H+.3+Lr*ext-c*5,0),eye=new THREE.Vector3(0,H+.3,0);
   stretch(riser,eye,conf);
+  _sw.subVectors(conf,eye);const sl=_sw.length()||1;swivel.position.copy(eye).addScaledVector(_sw,Math.min(.5,1.1/sl));swivel.quaternion.copy(riser.quaternion);
   lineMeshes.forEach((m,j)=>{const th=j/GORES*Math.PI*2,rr=Rs*(1-.075*s);stretch(m,conf,new THREE.Vector3(rr*Math.sin(th),skirtY,rr*Math.cos(th)))});
   return skirtY;
 }
@@ -775,6 +843,7 @@ function buildProfile(){
     a.push({t,alt,vel,d});d+=windAt(alt)*dt;alt-=vel*dt;t+=dt;
   }
   a.push({t,alt:0,vel:0,d});fl.drift=d;fl.prof=a;fl.T=t;fl.end=t+5;
+  TH.tgt.x=d-18;TH.first=null;TH.lastDraw=-1;
   fl.Dm=2*Math.sqrt((2*MASS*G/(RHO*CD*fl.v*fl.v))/Math.PI);
   fl.Rc=fl.Dm*50;fl.Ll=fl.Dm*100*1.05;fl.Lr=6;
   $('#hudfoot').innerHTML=`Vuelo estimado: <b>${fl.T.toFixed(0)} s</b> · <span class="${fl.T<=120?'good':'bad'}">${fl.T<=120?'dentro de los 120 s recomendados (R8)':'supera los 120 s recomendados (R8)'}</span><br>Ø paracaídas necesario: <b>${(fl.Dm*100).toFixed(0)} cm</b> con ${fmtN(TOTAL_G)} g y Cd 0,75 supuesto.<br>Deriva del ejemplo: <b>${fl.drift.toFixed(0)} m</b>.`;
@@ -804,13 +873,99 @@ function drawCharts(t){
   plot($('#c2'),p.map(q=>q.alt),p.map(q=>isaT(q.alt)),[0,fl.h0],[+(Tmin).toFixed(1),Tmax],cur,'m','temperatura (°C)','#ff7566');
 }
 const PHASES=[
- {to:2,t:'Liberación',s:'El CanSat se separa y cae libre. El LSM6DSOX detecta la liberación y la microSD empieza a registrar a 10 Hz. La duración es ilustrativa.'},
+ {to:2,t:'Liberación',s:'El CanSat se separa y cae libre. El BNO085 detecta la liberación y la microSD empieza a registrar. Los fotogramas térmicos con giro rápido se marcan como descartados. La duración es ilustrativa.'},
  {to:3.5,t:'Despliegue del paracaídas',s:'La tela sale, las cuerdas se tensan y el dosel se infla. Aquí la unión recibe el mayor tirón: debe soportar al menos 50 N (R7).'},
- {to:-8,t:'Descenso estable',s:'Envía temperatura y presión cada segundo a la estación terrena (§3.1). La deriva GNSS da el viento, y el SHT45, la humedad (§3.2). Cada anillo cian es un envío.'},
- {to:0,t:'Aproximación',s:'Al acercarse al suelo baja el viento y la deriva se reduce. Las bases recomiendan descender a 8–12 m/s (R8).'},
- {to:1e9,t:'Aterrizaje y recuperación',s:'Suena el zumbador y el GNSS da la posición (R13). El equipo recupera la microSD y obtiene las gráficas de altitud, temperatura, viento y humedad (§3.1, §3.2).'}
+ {to:-8,t:'Descenso estable',s:'Envía temperatura y presión cada segundo (§3.1). La deriva GNSS da el viento y el SHT45, la humedad. La cámara térmica cartografía el suelo; gira la vista hacia abajo para ver su campo de visión en ámbar. Cada anillo cian es un envío.'},
+ {to:0,t:'Aproximación',s:'Cerca del suelo cada píxel térmico mide pocos metros y la lona de 3 × 3 m ya destaca en la imagen. Las bases recomiendan descender a 8–12 m/s (R8).'},
+ {to:1e9,t:'Aterrizaje y modo centinela',s:'Suena el zumbador y el GNSS da la posición (R13). El CanSat pasa a modo centinela: envía temperatura, humedad y riesgo de ignición cada 30 s durante horas (R4).'}
 ];
 function phaseAt(t){if(t<2)return PHASES[0];if(t<3.5)return PHASES[1];if(t<fl.T-8)return PHASES[2];if(t<fl.T)return PHASES[3];return PHASES[4]}
+
+/* ---------- CÁMARA TÉRMICA SIMULADA: MLX90640, 55° × 35°, 32 × 24 píxeles ----------
+   La temperatura sale del mismo terreno que se ve en 3D: más verde = más fresco, más seco = más caliente.
+   Cada píxel promedia todo lo que cubre en el suelo (tabla de sumas acumuladas), igual que un sensor real. */
+const TH={W:32,H:24,FX:55*Math.PI/180,FZ:35*Math.PI/180,N:1024,TILE:2000,TMIN:20,TMAX:65,show:true,radio:false,lastDraw:-1,lastT:0,first:null,tmax:0,tgt:{x:0,z:6,s:3,T:65}};
+TH.ifov=TH.FX/TH.W;TH.tx=Math.tan(TH.FX/2);TH.tz=Math.tan(TH.FZ/2);
+(function(){
+  const N=TH.N,W=N+1,c=cnv(N,N,g=>g.drawImage(fieldTex.image,0,0,N,N)),d=c.getContext('2d').getImageData(0,0,N,N).data,S=new Float64Array(W*W);
+  for(let y=0;y<N;y++){let row=0;for(let x=0;x<N;x++){const i=(y*N+x)*4,r=d[i],g=d[i+1],b=d[i+2];row+=44-140*(g-r)/(g+r+1)+(r+g+b>480?3:0)-35;S[(y+1)*W+x+1]=S[y*W+x+1]+row}}
+  TH.S=S;TH.TOT=S[N*W+N];
+})();
+/* Suma periódica: el terreno se repite cada 2 km, como la textura */
+function thP(x,y){const N=TH.N,W=N+1,S=TH.S,qx=Math.floor(x/N),qy=Math.floor(y/N),rx=x-qx*N,ry=y-qy*N;return qx*qy*TH.TOT+qx*S[ry*W+N]+qy*S[N*W+rx]+S[ry*W+rx]}
+/* Temperatura media de un cuadrado de lado s (m) centrado en (X, Z) del terreno */
+function groundT(X,Z,s){
+  const N=TH.N,gx=(.5+X/TH.TILE)*N,gy=(.5+Z/TH.TILE)*N,h=s/TH.TILE*N/2;
+  const x0=Math.round(gx-h),y0=Math.round(gy-h);let x1=Math.round(gx+h),y1=Math.round(gy+h);if(x1<=x0)x1=x0+1;if(y1<=y0)y1=y0+1;
+  let T=(thP(x1,y1)-thP(x0,y1)-thP(x1,y0)+thP(x0,y0))/((x1-x0)*(y1-y0))+35;
+  const g=TH.tgt,hs=g.s/2,ox=Math.min(X+s/2,g.x+hs)-Math.max(X-s/2,g.x-hs),oz=Math.min(Z+s/2,g.z+hs)-Math.max(Z-s/2,g.z-hs);
+  if(ox>0&&oz>0){const f=Math.min(1,ox*oz/(s*s));T=T*(1-f)+g.T*f}
+  return T;
+}
+const thBuf=new Float32Array(TH.W*TH.H),_td=new THREE.Vector3(),_tq=new THREE.Quaternion();
+function thermalFrame(alt,d,q){
+  let max=-99,mi=0;
+  for(let j=0;j<TH.H;j++)for(let i=0;i<TH.W;i++){
+    _td.set(((i+.5)/TH.W*2-1)*TH.tx,-1,((j+.5)/TH.H*2-1)*TH.tz).normalize().applyQuaternion(q);
+    let T=-10;
+    if(_td.y<-.05){const r=alt/-_td.y;T=groundT(d+_td.x*r,_td.z*r,r*TH.ifov)+(Math.random()-.5)*.5}
+    thBuf[j*TH.W+i]=T;if(T>max){max=T;mi=j*TH.W+i}
+  }
+  return {max,mi};
+}
+const THLUT=(()=>{const st=['#000004','#1b0c41','#4a0c6b','#781c6d','#a52c60','#cf4446','#ed6925','#fb9b06','#f7d13d','#fcffa4'],o=new Uint8ClampedArray(256*3),rgb=h=>[1,3,5].map(i=>parseInt(h.substr(i,2),16));
+  for(let i=0;i<256;i++){const f=i/255*(st.length-1),a=Math.floor(f),b=Math.min(st.length-1,a+1),u=f-a,A=rgb(st[a]),B=rgb(st[b]);for(let c=0;c<3;c++)o[i*3+c]=A[c]+(B[c]-A[c])*u}return o})();
+const thHi=cnv(TH.W,TH.H,()=>{}),thLo=cnv(8,6,()=>{});
+function paint(cv,vals,w,h){const g=cv.getContext('2d'),img=g.createImageData(w,h);for(let i=0;i<w*h;i++){const k=Math.round(clamp((vals[i]-TH.TMIN)/(TH.TMAX-TH.TMIN))*255)*3;img.data.set([THLUT[k],THLUT[k+1],THLUT[k+2],255],i*4)}g.putImageData(img,0,0)}
+function thMsg(g,w,h,a,b){g.fillStyle='rgba(5,8,12,.64)';g.fillRect(0,0,w,h);g.textAlign='center';g.fillStyle='#e8edf2';g.font='600 15px "Barlow Condensed","Arial Narrow",Arial,sans-serif';g.fillText(a,w/2,h/2-3);g.fillStyle='#9aa8b6';g.font='400 10px "IBM Plex Mono",Menlo,monospace';g.fillText(b,w/2,h/2+13)}
+function updateThermal(t,alt,d,time,force){
+  if(!TH.show||S.mode!=='descenso')return;
+  if(!force&&Math.abs(time-TH.lastDraw)<.125)return;TH.lastDraw=time;
+  const cv=$('#thc'),w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;
+  if(t<TH.lastT-.5)TH.first=null;TH.lastT=t;
+  const landed=t>=fl.T,waiting=t===0&&!fl.playing,spin=!waiting&&t<3.5;
+  const r=devicePixelRatio>1?2:1;if(cv.width!==Math.round(w*r)){cv.width=Math.round(w*r);cv.height=Math.round(h*r)}
+  const g=cv.getContext('2d');g.setTransform(r,0,0,r,0,0);g.imageSmoothingEnabled=false;
+  let res=null;if(!landed){res=thermalFrame(Math.max(alt,.5),d,flightRig.quaternion);TH.tmax=res.max}
+  if(TH.radio){const lo=new Float32Array(48);for(let j=0;j<24;j++)for(let i=0;i<32;i++)lo[(j>>2)*8+(i>>2)]+=thBuf[j*32+i]/16;paint(thLo,lo,8,6);g.drawImage(thLo,0,0,w,h)}
+  else{paint(thHi,thBuf,32,24);g.drawImage(thHi,0,0,w,h)}
+  const det=TH.det=!!res&&!spin&&!waiting&&res.max>(TH.det?53:55);
+  if(det&&TH.first===null)TH.first=alt;
+  if(res&&!spin&&!waiting){
+    const cw=w/TH.W,ch=h/TH.H;
+    if(det){
+      const b=TH.radio?4:1,ci=Math.floor((res.mi%TH.W)/b)*b,cj=Math.floor(Math.floor(res.mi/TH.W)/b)*b;
+      g.strokeStyle='#59d0ee';g.lineWidth=2;g.strokeRect(ci*cw-3,cj*ch-3,cw*b+6,ch*b+6);
+      g.fillStyle='#59d0ee';g.font='500 10px "IBM Plex Mono",Menlo,monospace';g.textAlign=ci>TH.W*.6?'right':'left';g.fillText('foco',ci>TH.W*.6?ci*cw-5:(ci+b)*cw+5,cj*ch+ch*b/2+3);
+    }else{
+      _td.set(TH.tgt.x-d,-alt,TH.tgt.z).applyQuaternion(_tq.copy(flightRig.quaternion).invert());
+      if(_td.y<0){const u=(_td.x/-_td.y/TH.tx+1)/2,v=(_td.z/-_td.y/TH.tz+1)/2;
+        if(u>0&&u<1&&v>0&&v<1){const px=u*w,py=v*h;g.strokeStyle='rgba(232,237,242,.75)';g.lineWidth=1;g.setLineDash([3,3]);g.beginPath();g.arc(px,py,9,0,7);g.stroke();g.setLineDash([]);
+          g.fillStyle='rgba(232,237,242,.85)';g.font='400 9.5px "IBM Plex Mono",Menlo,monospace';g.textAlign=u>.6?'right':'left';g.fillText('lona',u>.6?px-13:px+13,py+3)}}
+    }
+  }
+  if(waiting)thMsg(g,w,h,'Esperando la liberación','pulsa Lanzar');
+  else if(spin)thMsg(g,w,h,'Fotograma descartado','giro rápido según el BNO085');
+  else if(landed)thMsg(g,w,h,'En tierra: modo centinela','T y HR cada 30 s');
+  const px=alt*TH.ifov,sc=px>=25?'escala Landsat':px>=8?'escala Sentinel-2':'escala dron',fx=v=>v<10?fmtN(v,1):String(Math.round(v));
+  $('#thInfo').innerHTML=landed
+    ?`Imagen térmica terminada.<br>${TH.first!==null?`La lona se distinguió por primera vez a <b>${Math.round(TH.first)} m</b>.`:'La lona no llegó a distinguirse.'}`
+    :`Píxel ≈ <b>${fx(px)} m</b> · ${sc}<br>Huella ${Math.round(alt*2*TH.tx)} × ${Math.round(alt*2*TH.tz)} m · Tmáx <b>${fmtN(TH.tmax,1)} °C</b><br>Lona 3 × 3 m: ${det?'<span class="det">detectada</span>':TH.first!==null?'ahora no se distingue':'no distinguible'}${TH.first!==null?` (1.ª vez a ${Math.round(TH.first)} m)`:''}`;
+}
+/* Lona negra de 3 × 3 m al sol, unos 65 °C, cerca del punto de aterrizaje */
+const tarp=new THREE.Mesh(new THREE.PlaneGeometry(1,1),std({color:0x141619,roughness:.45,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4}));
+tarp.rotation.x=-Math.PI/2;tarp.receiveShadow=true;flightEnv.add(tarp);
+/* Campo de visión de la cámara proyectado sobre el suelo */
+const thFr=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xf5b13d,transparent:true,opacity:.8}));
+thFr.geometry.setAttribute('position',new THREE.BufferAttribute(new Float32Array(16*3),3));thFr.frustumCulled=false;flightEnv.add(thFr);
+const _fc=new THREE.Vector3();
+function updateFrustum(vis,gyW){
+  thFr.visible=vis;if(!vis)return;
+  canRoot.localToWorld(_fc.set(0,.08,0));
+  const pts=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([a,b])=>{_td.set(a*TH.tx,-1,b*TH.tz).normalize().applyQuaternion(flightRig.quaternion);const k=_td.y<-.02?(gyW-_fc.y)/_td.y:20000;return _fc.clone().addScaledVector(_td,Math.min(k,20000))});
+  const pos=thFr.geometry.attributes.position;let n=0;const put=v=>pos.setXYZ(n++,v.x,v.y,v.z);
+  pts.forEach(p=>{put(_fc);put(p)});pts.forEach((p,i)=>{put(p);put(pts[(i+1)%4])});pos.needsUpdate=true;
+}
 
 /* ---------- ESTADO ---------- */
 const S={mode:'modelo',e:0,eGoal:0,xray:false,dims:true,flow:true,labels:true,sel:null,auto:true,tour:null,tourT:0};
@@ -842,11 +997,11 @@ const wait=ms=>new Promise(r=>setTimeout(r,REDUCED?Math.min(ms,1200):ms));
 /* Etiquetas y líneas guía */
 const svg=$('#leaders'),lblEls={};
 Object.entries(CATS).forEach(([id,c])=>{
-  const b=document.createElement('button');b.className='lbl'+(id==='secundaria'?' sec':'');b.type='button';
+  const b=document.createElement('button');b.className='lbl'+(SEC.has(id)?' sec':'');b.type='button';
   b.innerHTML=`<b>${c.n}</b><span>${c.short}</span><small>${c.status}</small>`;
   b.addEventListener('click',()=>select(S.sel===id?null:id));$('#labels').appendChild(b);
   const line=document.createElementNS('http://www.w3.org/2000/svg','polyline'),dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
-  dot.setAttribute('r',3.2);if(id==='secundaria'){line.classList.add('sec');dot.classList.add('sec')}svg.append(line,dot);
+  dot.setAttribute('r',3.2);if(SEC.has(id)){line.classList.add('sec');dot.classList.add('sec')}svg.append(line,dot);
   lblEls[id]={b,line,dot,y:null,x:null};
 });
 const _v=new THREE.Vector3();
@@ -884,11 +1039,11 @@ function tweenBlocks(){return false}
 function select(id){
   S.sel=id;
   Object.entries(lblEls).forEach(([k,o])=>{const on=k===id;o.b.classList.toggle('sel',on);o.line.classList.toggle('sel',on);o.dot.classList.toggle('sel',on)});
-  Object.entries(catMats).forEach(([k,mats])=>mats.forEach(m=>{if(!m.emissive)return;if(k===id){m.emissive.set(k==='secundaria'?0xf5b13d:0x2b7fa8);m.emissiveIntensity=k==='secundaria'?.6:.42}else if(m.userData.baseE){m.emissive.copy(m.userData.baseE);m.emissiveIntensity=m.userData.baseI}}));
+  Object.entries(catMats).forEach(([k,mats])=>mats.forEach(m=>{if(!m.emissive)return;if(k===id){m.emissive.set(SEC.has(k)?0xf5b13d:0x2b7fa8);m.emissiveIntensity=SEC.has(k)?.6:.42}else if(m.userData.baseE){m.emissive.copy(m.userData.baseE);m.emissiveIntensity=m.userData.baseI}}));
   const card=$('#card');
   if(!id){card.hidden=true;return}
   const c=CATS[id];
-  $('#cardBody').innerHTML=`<div class="num">${c.n} / 8 · ${c.status}</div><h2>${c.name}</h2><p>${c.fn}</p><h3>Elección propuesta</h3><ul>${c.parts.map(r=>`<li>${r}</li>`).join('')}</ul><h3>Qué piden las bases</h3><ul>${c.req.map(r=>`<li>${r}</li>`).join('')}</ul><div class="pending"><h3>A comprobar en el prototipo</h3>${c.check}</div>`;
+  $('#cardBody').innerHTML=`<div class="num">${c.n} / ${NCATS} · ${c.status}</div><h2>${c.name}</h2><p>${c.fn}</p><h3>Elección propuesta</h3><ul>${c.parts.map(r=>`<li>${r}</li>`).join('')}</ul><h3>Qué piden las bases</h3><ul>${c.req.map(r=>`<li>${r}</li>`).join('')}</ul><div class="pending"><h3>A comprobar en el prototipo</h3>${c.check}</div>`;
   card.hidden=false;
   if(S.mode!=='descenso'&&!S.tour&&S.e>.5){
     const bd=bodies[c.anchorBody];_v.set(...c.anchor);bd.g.localToWorld(_v);
@@ -925,7 +1080,7 @@ async function setMode(m,instant){
   const prev=S.mode;S.mode=m;
   try{history.replaceState(null,'','#'+m)}catch(e){}
   document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.mode===m));
-  $('#barM').hidden=m!=='modelo';$('#barD').hidden=m!=='despiece';$('#barF').hidden=m!=='descenso';$('#hud').hidden=m!=='descenso';
+  $('#barM').hidden=m!=='modelo';$('#barD').hidden=m!=='despiece';$('#barF').hidden=m!=='descenso';$('#hud').hidden=m!=='descenso';$('#therm').hidden=m!=='descenso'||!TH.show;TH.lastDraw=-1;
   select(null);
   $('#cap').hidden=true;
   const crossing=(prev==='descenso')!==(m==='descenso');
@@ -966,11 +1121,13 @@ async function runTour(){
     await go(()=>wait(1000));
     await go(async()=>{caption('Acceso lateral','Cuatro NiMH AAA, interruptor PWR y control TX se alcanzan sin abrir la lata (R4, R5, R11).');await camTo([0,3.3,2],[.28,.1,1],21,3)});
     await go(()=>wait(2000));
-    await go(async()=>{caption('Interior','De abajo arriba: lastre, radio, batería, placa, sensores primarios, humedad y movimiento, y GNSS.');setXray(true);await camTo([0,6.4,0],[-.55,.22,1],40,2.6)});
+    await go(async()=>{caption('Ventana térmica','La cámara MLX90640 mira al suelo por una ventana de Ø12 mm. La antena LoRa va desplazada del eje para quedar fuera de su campo de visión.');await camTo([0,.4,0],[.45,-.8,.55],30,3)});
+    await go(()=>wait(2000));
+    await go(async()=>{caption('Interior','De abajo arriba: cámara térmica rodeada por el lastre, batería, placa, sensores primarios, humedad y orientación, GNSS y radio.');setXray(true);await camTo([0,6.4,0],[-.55,.22,1],40,2.6)});
     await go(()=>wait(1100));
     await go(async()=>{setXray(false);caption('Despiece','Cada pieza se separa siguiendo su eje de montaje.');S.eGoal=1;await camTo(VIEW.despiece.t,[.34,.12,1],VIEW.despiece.r,4.6)});
     await go(()=>wait(1700));
-    await go(async()=>{caption('Misión secundaria','SHT45, LSM6DSOX y GNSS miden el perfil de humedad y viento del primer kilómetro (§3.2).');await camTo([0,19,0],[.2,.15,1],44,2.4)});
+    await go(async()=>{caption('Misión VIGÍA','GNSS, SHT45 y BNO085 miden viento y humedad. La cámara térmica de la base cartografía el suelo (§3.2).');await camTo([0,19,0],[.2,.15,1],44,2.4)});
     await go(()=>wait(2000));
     await go(async()=>{caption('Volvemos a montar','Todo debe caber de nuevo en el volumen oficial.');S.eGoal=0;await camTo(VIEW.modelo.t,VIEW.modelo.d,VIEW.modelo.r,4.8)});
   }catch(e){}
@@ -1039,7 +1196,12 @@ function updateFlight(dt,time){
   /* HUD */
   const alt=st.alt;
   $('#vAlt').textContent=alt.toFixed(0)+' m';$('#vVel').textContent=st.vel.toFixed(1)+' m/s';$('#vP').textContent=isaP(alt).toFixed(1)+' hPa';$('#vT').textContent=isaT(alt).toFixed(1)+' °C';$('#vH').textContent=rhAt(alt).toFixed(0)+' %';$('#vW').textContent=(t<T?windAt(alt):0).toFixed(1)+' m/s';
-  $('#pkt').textContent=t<T?`AB1,${String(sec).padStart(3,'0')},${isaP(alt).toFixed(1)},${isaT(alt).toFixed(1)},${rhAt(alt).toFixed(0)},${st.d.toFixed(0)}`:'AB1,fin de misión';
+  $('#pkt').textContent=t<T?`AB1,${String(sec).padStart(3,'0')},${isaP(alt).toFixed(1)},${isaT(alt).toFixed(1)},${rhAt(alt).toFixed(0)},${st.d.toFixed(0)},${TH.tmax.toFixed(1)}`:'AB1,modo centinela';
+  /* cámara térmica: lona en el suelo, campo de visión e imagen */
+  tarp.scale.set(TH.tgt.s*6,TH.tgt.s*6,1);tarp.position.set(wx+TH.tgt.x*6,gy+.4,TH.tgt.z*6);
+  flightRig.updateMatrixWorld(true);
+  updateFrustum(TH.show&&t<T,gy+.5);
+  updateThermal(t,alt,st.d,time);
   $('#timeR').value=Math.round(t/fl.end*1000);$('#timeO').textContent=Math.min(t,T).toFixed(0)+' s';
   const p=phaseAt(t);if(p!==lastPhase){lastPhase=p;caption(p.t,p.s)}
   chartTick+=dt;if(chartTick>.12){chartTick=0;drawCharts(t)}
@@ -1099,7 +1261,9 @@ $('#playBtn').addEventListener('click',()=>{
   if(fl.t>=fl.end){fl.t=0;fl.lastPacket=-1;fl.userCam=false}
   fl.playing=true;$('#playBtn').textContent='Pausa';
 });
-$('#timeR').addEventListener('input',e=>{fl.t=e.target.value/1000*fl.end;fl.playing=false;$('#playBtn').textContent='Continuar';drawCharts(fl.t)});
+$('#timeR').addEventListener('input',e=>{fl.t=e.target.value/1000*fl.end;fl.playing=false;$('#playBtn').textContent='Continuar';drawCharts(fl.t);TH.lastDraw=-1});
+$('#thBtn').addEventListener('click',()=>{TH.show=!TH.show;$('#thBtn').setAttribute('aria-pressed',TH.show);$('#therm').hidden=!TH.show;TH.lastDraw=-1});
+[['#thSD',false],['#thRadio',true]].forEach(([s,v])=>$(s).addEventListener('click',()=>{TH.radio=v;$('#thSD').setAttribute('aria-pressed',!v);$('#thRadio').setAttribute('aria-pressed',v);TH.lastDraw=-1}));
 function rebuild(){const f=fl.t/fl.end;buildProfile();fl.t=f*fl.end}
 $('#velR').addEventListener('input',e=>{fl.v=+e.target.value;$('#velO').textContent=fl.v+' m/s';rebuild()});
 $('#altS').addEventListener('change',e=>{fl.h0=+e.target.value;rebuild()});
